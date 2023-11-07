@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "shutdown-timer (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "shutdown-timer (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
