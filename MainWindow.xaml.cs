@@ -25,12 +25,9 @@ namespace shutdown_timer
 	{
 		public MainWindow()
 		{
-			this.InitializeComponent();
-		}
+			InitializeComponent();
 
-		private void myButton_Click(object sender, RoutedEventArgs e)
-		{
-			myButton.Content = "Clicked";
+			SystemBackdrop = new MicaBackdrop();
 		}
 	}
 }

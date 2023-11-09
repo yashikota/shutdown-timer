@@ -32,7 +32,7 @@ namespace shutdown_timer
 		/// </summary>
 		public App()
 		{
-			this.InitializeComponent();
+			InitializeComponent();
 		}
 
 		/// <summary>
