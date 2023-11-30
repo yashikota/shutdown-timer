@@ -14,17 +14,19 @@ namespace shutdown_timer
 	{
 		public MainWindow()
 		{
-			InitializeComponent();
+			this.InitializeComponent();
 
 			// 背景をMicaデザインに
-			SystemBackdrop = new MicaBackdrop();
+			this.SystemBackdrop = new MicaBackdrop();
 
 			// ウィンドウサイズの調整
-			IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-			WindowId windowId = Win32Interop.GetWindowIdFromWindow(hWnd);
-			AppWindow appWindow = AppWindow.GetFromWindowId(windowId);
+			this.AppWindow.Resize(new SizeInt32(800, 600));
 
-			appWindow.Resize(new SizeInt32(800, 600));
+			// タイトルの変更
+			this.Title = "Shutdown Timer";
+
+			// アイコンの変更
+			this.AppWindow.SetIcon("Assets/timer.ico"); 
 		}
 	}
 }
