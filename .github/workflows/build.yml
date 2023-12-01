@@ -10,8 +10,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Add msbuild to PATH
+      - name: setup msbuild
         uses: microsoft/setup-msbuild@v1.1
-      
+  
+      - name: setup nuget
+        uses: NuGet/setup-nuget@v1.0.2
+  
+      - name: restore project packages
+        run: nuget restore shutdown-timer.sln
+
       - name: Build app for release
-        run: msbuild shutdown-timer.csproj -t:rebuild -verbosity:diag -property:Configuration=Release -property:Platform=x64
+        run: msbuild shutdown-timer.sln /p:Configuration=Release,Platform=x64 -t:rebuild -verbosity:diag 
