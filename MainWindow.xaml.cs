@@ -1,9 +1,8 @@
-using Microsoft.UI;
-using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
-using System;
 using Windows.Graphics;
+using System.Diagnostics;
+using System;
 
 namespace shutdown_timer
 {
@@ -12,21 +11,57 @@ namespace shutdown_timer
 	/// </summary>
 	public sealed partial class MainWindow : Window
 	{
+		bool isTimerStart = false;
+
 		public MainWindow()
 		{
+			// Initialize the window
 			this.InitializeComponent();
 
-			// 背景をMicaデザインに
+			// Set the window properties
 			this.SystemBackdrop = new MicaBackdrop();
-
-			// ウィンドウサイズの調整
 			this.AppWindow.Resize(new SizeInt32(800, 600));
-
-			// タイトルの変更
 			this.Title = "Shutdown Timer";
+			this.AppWindow.SetIcon("Assets/timer.ico");
+		}
 
-			// アイコンの変更
-			this.AppWindow.SetIcon("Assets/timer.ico"); 
+		private void ShutdownButtonClick(object sender, RoutedEventArgs e)
+		{
+			if (isTimerStart)
+			{
+				isTimerStart = false;
+				MessageText.Text = "Cancel Shutdown";
+
+				var psi = new ProcessStartInfo()
+				{
+					FileName = "shutdown.exe",
+					Arguments = "/a",
+					UseShellExecute = false,
+					CreateNoWindow = true
+				};
+
+				var process = Process.Start(psi);
+			}
+			else
+			{
+				isTimerStart = true;
+				TimeSpan shutdownTime = ShutdownTimePicker.Time;
+				TimeSpan currentTime = DateTime.Now.TimeOfDay;
+				string diffTime = ((int)(shutdownTime - currentTime).TotalSeconds).ToString();
+
+				MessageText.Text = diffTime;
+
+				var psi = new ProcessStartInfo()
+				{
+					FileName = "shutdown.exe",
+					Arguments = "/s /t " + diffTime,
+					UseShellExecute = false,
+					CreateNoWindow = true
+				};
+
+				var process = Process.Start(psi);
+			}
+
 		}
 	}
 }

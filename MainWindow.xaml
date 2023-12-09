@@ -9,6 +9,8 @@
     mc:Ignorable="d">
 
     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-        <TimePicker Header="Time to shutdown" SelectedTime="00:00" ClockIdentifier="24HourClock"/>
+        <TimePicker x:Name="ShutdownTimePicker" Header="Time to shutdown" SelectedTime="00:00" ClockIdentifier="24HourClock"/>
+        <Button x:Name="ShutdownButton" Content="ShutDown" Click="ShutdownButtonClick"/>
+        <TextBlock x:Name="MessageText" />
     </StackPanel>
 </Window>
