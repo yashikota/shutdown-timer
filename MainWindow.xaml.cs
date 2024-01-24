@@ -6,9 +6,6 @@ using System;
 
 namespace shutdown_timer
 {
-	/// <summary>
-	/// An empty window that can be used on its own or navigated to within a Frame.
-	/// </summary>
 	public sealed partial class MainWindow : Window
 	{
 		bool isTimerStart = false;
@@ -40,16 +37,20 @@ namespace shutdown_timer
 					CreateNoWindow = true
 				};
 
-				var process = Process.Start(psi);
+				Process.Start(psi);
 			}
 			else
 			{
 				isTimerStart = true;
 				TimeSpan shutdownTime = ShutdownTimePicker.Time;
 				TimeSpan currentTime = DateTime.Now.TimeOfDay;
-				string diffTime = ((int)(shutdownTime - currentTime).TotalSeconds).ToString();
 
-				MessageText.Text = diffTime;
+				int diffTime = (int)(shutdownTime - currentTime).TotalSeconds;
+				if (diffTime < 0)
+				{
+					diffTime += (int)TimeSpan.FromHours(24).TotalSeconds;
+				}
+				MessageText.Text = diffTime.ToString();
 
 				var psi = new ProcessStartInfo()
 				{
@@ -59,9 +60,8 @@ namespace shutdown_timer
 					CreateNoWindow = true
 				};
 
-				var process = Process.Start(psi);
+				Process.Start(psi);
 			}
-
 		}
 	}
 }
