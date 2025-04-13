@@ -2,21 +2,7 @@
 
 A modern and simple Windows shutdown timer application that allows you to automatically shut down your PC at a specific time or after a set duration.
 
-## Features
-
-- Two Timer Modes
-  - Specific Time: Schedule shutdown at a specific time
-  - Duration: Set shutdown after specified hours and minutes
-
-- User-Friendly Interface
-  - Modern design with WinUI 3 and Mica effect
-  - Real-time countdown display
-  - Clear visual feedback
-
-- Convenient Functions
-  - Shutdown schedule persistence
-  - Schedule recovery after application restart
-  - One-click shutdown cancellation
+https://github.com/user-attachments/assets/803cc122-d4c7-4eb1-b213-0d7de1975c48
 
 ## How to Use
 
