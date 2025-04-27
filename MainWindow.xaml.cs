@@ -104,7 +104,7 @@ namespace shutdown_timer
 					}
 				}
 			}
-			catch (Exception ex)
+			catch
 			{
 				MessageText.Text = "Failed to load schedule";
 				if (File.Exists(SCHEDULE_FILE))

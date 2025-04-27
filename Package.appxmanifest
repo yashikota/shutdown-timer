@@ -15,9 +15,10 @@
   <mp:PhoneIdentity PhoneProductId="8541b26d-4d0f-46a3-a517-50a7fc49c4d2" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>shutdown-timer</DisplayName>
+    <DisplayName>Shutdown Timer</DisplayName>
     <PublisherDisplayName>kota</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
+    <Description>A modern and simple Windows shutdown timer application</Description>
   </Properties>
 
   <Dependencies>
@@ -34,8 +35,8 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="shutdown-timer"
-        Description="shutdown-timer"
+        DisplayName="Shutdown Timer"
+        Description="A modern and simple Windows shutdown timer application"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
