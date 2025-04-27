@@ -1,0 +1,44 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build -c Release --no-restore
+
+    - name: Publish
+      run: |
+        $version = $env:GITHUB_REF -replace 'refs/tags/v', ''
+        dotnet publish -c Release `
+          -p:WindowsPackageType=None `
+          -p:SelfContained=true `
+          -p:PublishSingleFile=true `
+          -p:IncludeNativeLibrariesForSelfExtract=true `
+          -p:RuntimeIdentifier=win-x64 `
+          -p:Version=$version
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          shutdown-timer/bin/Release/net8.0-windows10.0.20348.0/win-x64/publish/shutdown-timer.exe
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
