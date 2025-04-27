@@ -93,7 +93,7 @@ namespace shutdown_timer
 						ButtonIcon.Glyph = "\uE947"; // Stop icon
 						ButtonText.Text = "Cancel Shutdown";
 						ShutdownButton.Style = Application.Current.Resources["DangerButtonStyle"] as Style;
-						MessageText.Text = "Shutdown scheduled";
+						MessageText.Text = "";
 						CountdownPanel.Visibility = Visibility.Visible;
 						_countdownTimer.Start();
 					}
@@ -185,7 +185,7 @@ namespace shutdown_timer
 			ButtonIcon.Glyph = "\uE947"; // Stop icon
 			ButtonText.Text = "Cancel Shutdown";
 			ShutdownButton.Style = Application.Current.Resources["DangerButtonStyle"] as Style;
-			MessageText.Text = "Shutdown scheduled";
+			MessageText.Text = "";
 			CountdownPanel.Visibility = Visibility.Visible;
 			_countdownTimer.Start();
 
@@ -209,7 +209,7 @@ namespace shutdown_timer
 			ButtonIcon.Glyph = "\uE916"; // Timer icon
 			ButtonText.Text = "Start Timer";
 			ShutdownButton.Style = Application.Current.Resources["AccentButtonStyle"] as Style;
-			MessageText.Text = "Shutdown cancelled";
+			MessageText.Text = "";
 			CountdownPanel.Visibility = Visibility.Collapsed;
 			_countdownTimer.Stop();
 
