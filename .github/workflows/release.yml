@@ -32,7 +32,8 @@ jobs:
           -p:PublishSingleFile=true `
           -p:IncludeNativeLibrariesForSelfExtract=true `
           -p:RuntimeIdentifier=win-x64 `
-          -p:Version=$version
+          -p:Version=$version `
+          -p:PublishProfile=Properties\PublishProfiles\win-x64.pubxml
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
