@@ -8,105 +8,225 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid>
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Main Content -->
-        <StackPanel Grid.Row="1"
-                    Margin="20"
-                    VerticalAlignment="Center"
-                    Spacing="40">
-
-            <!-- Header -->
-            <TextBlock Text="Shutdown Timer"
-                     FontSize="28"
-                     FontWeight="SemiBold"
-                     HorizontalAlignment="Center"/>
-
-            <!-- Mode Selector -->
-            <ComboBox x:Name="ModeSelector"
-                      HorizontalAlignment="Center"
-                      MinWidth="200">
-                <ComboBoxItem Content="Specific Time" IsSelected="True"/>
-                <ComboBoxItem Content="Duration"/>
-            </ComboBox>
-
-            <!-- Time Selection Panel -->
-            <Grid x:Name="TimeSelectionPanel" HorizontalAlignment="Center">
+        <!-- Title Bar -->
+        <Border Grid.Row="0"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="24,16">
+            <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Specific Time Mode -->
-                <TimePicker x:Name="ShutdownTimePicker"
-                           Header="Shutdown at"
-                           MinWidth="200"
-                           SelectedTime="00:00"
-                           ClockIdentifier="24HourClock"
-                           FontSize="20"/>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                    <FontIcon FontFamily="Segoe Fluent Icons"
+                             Glyph="&#xE916;"
+                             FontSize="20"
+                             Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+                    <TextBlock x:Name="HeaderText"
+                             Text="Shutdown Timer"
+                             FontSize="20"
+                             FontWeight="SemiBold"
+                             VerticalAlignment="Center"/>
+                </StackPanel>
 
-                <!-- Duration Mode -->
-                <StackPanel x:Name="DurationPanel"
-                          Grid.Column="0"
-                          Orientation="Horizontal"
-                          Spacing="10"
-                          Visibility="Collapsed">
-                    <NumberBox x:Name="HoursInput"
-                             Header="Hours"
-                             Value="0"
-                             SpinButtonPlacementMode="Compact"
-                             MinWidth="100"
-                             Maximum="23"
-                             Minimum="0"/>
-                    <NumberBox x:Name="MinutesInput"
-                             Header="Minutes"
-                             Value="0"
-                             SpinButtonPlacementMode="Compact"
-                             MinWidth="100"
-                             Maximum="59"
-                             Minimum="0"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <Button x:Name="SettingsButton"
+                            Style="{StaticResource SubtleButtonStyle}"
+                            ToolTipService.ToolTip="Settings"
+                            Click="SettingsButton_Click">
+                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE713;" FontSize="16"/>
+                    </Button>
+                    <Button x:Name="InfoButton"
+                            Style="{StaticResource SubtleButtonStyle}"
+                            ToolTipService.ToolTip="About"
+                            Click="InfoButton_Click">
+                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE946;" FontSize="16"/>
+                    </Button>
                 </StackPanel>
             </Grid>
+        </Border>
 
-            <!-- Action Buttons -->
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Center"
-                        Spacing="10">
-                <Button x:Name="ShutdownButton"
-                        Click="ShutdownButtonClick"
-                        Style="{StaticResource AccentButtonStyle}">
-                    <Button.Content>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <FontIcon x:Name="ButtonIcon"
-                                    FontFamily="Segoe Fluent Icons"
-                                    Glyph="&#xE916;"/>
-                            <TextBlock x:Name="ButtonText" Text="Start Timer"/>
+        <!-- Main Content -->
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="24">
+            <StackPanel Spacing="24" MaxWidth="600">
+
+
+                <!-- Timer Configuration -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="20">
+                    <StackPanel Spacing="20">
+
+                                                <!-- Mode Selection -->
+                        <StackPanel Spacing="16">
+                            <SelectorBar x:Name="ModeSelectorBar"
+                                        SelectionChanged="ModeSelectorBar_SelectionChanged"
+                                        SelectedItem="{x:Bind DurationSelectorItem}">
+                                <SelectorBarItem x:Name="DurationSelectorItem" Text="Duration"/>
+                                <SelectorBarItem x:Name="SpecificTimeSelectorItem" Text="Specific Time"/>
+                            </SelectorBar>
+
+                            <!-- Duration Mode Content -->
+                            <StackPanel x:Name="DurationModeContent" Spacing="16" Visibility="Visible">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <NumberBox x:Name="HoursInput"
+                                             Grid.Column="0"
+                                             Header="Hours"
+                                             Value="0"
+                                             SpinButtonPlacementMode="Compact"
+                                             Maximum="23"
+                                             Minimum="0"
+                                             Margin="0,0,8,0"
+                                             ValueChanged="TimeInput_ValueChanged"/>
+
+                                    <NumberBox x:Name="MinutesInput"
+                                             Grid.Column="1"
+                                             Header="Minutes"
+                                             Value="30"
+                                             SpinButtonPlacementMode="Compact"
+                                             Maximum="59"
+                                             Minimum="0"
+                                             Margin="8,0,8,0"
+                                             ValueChanged="TimeInput_ValueChanged"/>
+
+                                    <NumberBox x:Name="SecondsInput"
+                                             Grid.Column="2"
+                                             Header="Seconds"
+                                             Value="0"
+                                             SpinButtonPlacementMode="Compact"
+                                             Maximum="59"
+                                             Minimum="0"
+                                             Margin="8,0,0,0"
+                                             ValueChanged="TimeInput_ValueChanged"/>
+                                </Grid>
+
+                                <TextBlock x:Name="DurationPreview"
+                                         Text="30分後 (00:30) にシャットダウンします"
+                                         FontSize="14"
+                                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                         HorizontalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Specific Time Mode Content -->
+                            <StackPanel x:Name="SpecificTimeModeContent" Spacing="16" Visibility="Collapsed">
+                                <TimePicker x:Name="ShutdownTimePicker"
+                                           Header="Shutdown Time"
+                                           SelectedTime="00:00"
+                                           ClockIdentifier="24HourClock"
+                                           HorizontalAlignment="Center"
+                                           SelectedTimeChanged="ShutdownTimePicker_SelectedTimeChanged"/>
+
+                                <TextBlock x:Name="TimePreview"
+                                         Text="今日の0:00にシャットダウンします"
+                                         FontSize="14"
+                                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                         HorizontalAlignment="Center"/>
+                            </StackPanel>
                         </StackPanel>
-                    </Button.Content>
-                </Button>
-            </StackPanel>
 
-            <!-- Status Message -->
-            <TextBlock x:Name="MessageText"
-                      TextAlignment="Center"
-                      FontSize="16"
-                      Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+                        <!-- Action Options -->
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Action Options"
+                                     FontWeight="SemiBold"
+                                     FontSize="14"/>
+                            <RadioButtons x:Name="ActionTypeRadio" SelectedIndex="0">
+                                <RadioButton Content="Shutdown" Tag="shutdown"/>
+                                <RadioButton Content="Restart" Tag="restart"/>
+                                <RadioButton Content="Sleep" Tag="sleep"/>
+                                <RadioButton Content="Logoff" Tag="logoff"/>
+                            </RadioButtons>
+                        </StackPanel>
 
-            <!-- Countdown Display -->
-            <StackPanel x:Name="CountdownPanel"
-                       Visibility="Collapsed"
-                       Spacing="8"
-                       HorizontalAlignment="Center">
-                <TextBlock x:Name="CountdownDisplay"
-                          TextAlignment="Center"
-                          FontSize="24"
-                          FontWeight="SemiBold"/>
+                        <!-- Force Shutdown Option -->
+                        <CheckBox x:Name="ForceShutdownCheck"
+                                  Content="Force shutdown (unsaved data will be lost)"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Control Buttons -->
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Center"
+                            Spacing="12">
+                    <Button x:Name="StartButton"
+                            Click="StartButton_Click"
+                            Style="{StaticResource AccentButtonStyle}"
+                            MinWidth="120">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon x:Name="StartButtonIcon"
+                                    FontFamily="Segoe Fluent Icons"
+                                    Glyph="&#xE768;"/>
+                            <TextBlock x:Name="StartButtonText" Text="Start"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="CancelButton"
+                            Click="CancelButton_Click"
+                            IsEnabled="False"
+                            MinWidth="120">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE711;"/>
+                            <TextBlock Text="Cancel"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
             </StackPanel>
-        </StackPanel>
+        </ScrollViewer>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="2"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="24,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Status Message -->
+                <TextBlock x:Name="StatusText"
+                          Grid.Column="0"
+                          Text="Ready"
+                          FontSize="14"
+                          VerticalAlignment="Center"/>
+
+                <!-- Countdown Display -->
+                <StackPanel x:Name="CountdownPanel"
+                           Grid.Column="1"
+                           Orientation="Horizontal"
+                           Spacing="8"
+                           Visibility="Collapsed">
+                    <FontIcon FontFamily="Segoe Fluent Icons"
+                             Glyph="&#xE916;"
+                             FontSize="16"
+                             Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+                    <TextBlock x:Name="CountdownDisplay"
+                              FontSize="14"
+                              FontWeight="SemiBold"
+                              Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </Window>
