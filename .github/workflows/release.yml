@@ -1,48 +1,82 @@
-name: Release Build
+name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    tags: [ 'v*' ]
+  workflow_dispatch:
 
 jobs:
-  build:
+  publish:
+    name: Build & Publish
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rid: [ win-x64, win-arm64 ]
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Restore
+        run: dotnet restore
 
-    - name: Build
-      run: dotnet build -c Release --no-restore
+      - name: Publish
+        run: >
+          dotnet publish
+          shutdown-timer.csproj
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained true
+          /p:WindowsAppSDKSelfContained=true
+          /p:PublishSingleFile=false
+          /p:IncludeNativeLibrariesForSelfExtract=false
 
-    - name: Publish
-      run: |
-        $version = $env:GITHUB_REF -replace 'refs/tags/v', ''
-        dotnet publish -c Release `
-          -p:WindowsPackageType=None `
-          -p:SelfContained=true `
-          -p:PublishSingleFile=true `
-          -p:IncludeNativeLibrariesForSelfExtract=true `
-          -p:RuntimeIdentifier=win-x64 `
-          -p:Version=$version `
-          -p:PublishProfile=Properties\PublishProfiles\win-x64.pubxml
+      - name: Collect & Zip
+        shell: pwsh
+        run: |
+          $Rid = "${{ matrix.rid }}"
+          $tfm = "net8.0-windows10.0.20348.0"
 
-    - name: Create Release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          bin/Release/net8.0-windows10.0.20348.0/win-x64/publish/shutdown-timer.dll
-          bin/Release/net8.0-windows10.0.20348.0/win-x64/publish/shutdown-timer.exe
-          bin/Release/net8.0-windows10.0.20348.0/win-x64/publish/shutdown-timer.deps.json
-          bin/Release/net8.0-windows10.0.20348.0/win-x64/publish/shutdown-timer.runtimeconfig.json
-        generate_release_notes: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          $projDir = "."
+          $pubDir  = Join-Path $projDir "bin\Release\$tfm\$Rid\publish"
+          if (-not (Test-Path $pubDir)) { throw "Publish directory not found: $pubDir" }
+
+          $dist = "dist\shutdown-timer-$Rid"
+          New-Item -ItemType Directory -Force -Path $dist | Out-Null
+          Copy-Item "$pubDir\*" $dist -Recurse -Force
+
+          $zip = "dist\shutdown-timer-$Rid.zip"
+          if (Test-Path $zip) { Remove-Item $zip -Force }
+          Compress-Archive -Path "$dist\*" -DestinationPath $zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: shutdown-timer-${{ matrix.rid }}
+          path: dist/shutdown-timer-*.zip
+          if-no-files-found: error
+
+  release:
+    name: Create GitHub Release (on tag)
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
