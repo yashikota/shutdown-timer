@@ -32,23 +32,24 @@ jobs:
           shutdown-timer.csproj
           -c Release
           -r ${{ matrix.rid }}
+          -f net8.0-windows10.0.20348.0
           --self-contained true
           /p:WindowsAppSDKSelfContained=true
           /p:PublishSingleFile=false
           /p:IncludeNativeLibrariesForSelfExtract=false
+          -o publish/${{ matrix.rid }}
 
       - name: Collect & Zip
         shell: pwsh
         run: |
           $Rid = "${{ matrix.rid }}"
-          $tfm = "net8.0-windows10.0.20348.0"
-
-          $projDir = "."
-          $pubDir  = Join-Path $projDir "bin\Release\$tfm\$Rid\publish"
+          $pubDir = "publish\$Rid"
           if (-not (Test-Path $pubDir)) { throw "Publish directory not found: $pubDir" }
 
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+
           $dist = "dist\shutdown-timer-$Rid"
-          New-Item -ItemType Directory -Force -Path $dist | Out-Null
+          if (Test-Path $dist) { Remove-Item $dist -Recurse -Force }
           Copy-Item "$pubDir\*" $dist -Recurse -Force
 
           $zip = "dist\shutdown-timer-$Rid.zip"
@@ -59,7 +60,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: shutdown-timer-${{ matrix.rid }}
-          path: dist/shutdown-timer-*.zip
+          path: dist/shutdown-timer-${{ matrix.rid }}.zip
           if-no-files-found: error
 
   release:
