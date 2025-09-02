@@ -10,33 +10,39 @@ namespace shutdown_timer.Dialogs
     {
         private readonly SettingsService _settingsService;
         private readonly LocalizationService _localizationService;
-        private AppSettings _currentSettings;
+        private AppSettings _currentSettings = null!;
+        private readonly Action<AppSettings>? _onSettingsChanged;
+        private bool _isInitializing = true;
 
-        public AppSettings Settings { get; private set; }
+        public AppSettings Settings { get; private set; } = null!;
 
-                public SettingsDialog()
+        public SettingsDialog(Action<AppSettings>? onSettingsChanged = null)
         {
             this.InitializeComponent();
             _settingsService = SettingsService.Instance;
             _localizationService = LocalizationService.Instance;
+            _onSettingsChanged = onSettingsChanged;
 
             LoadCurrentSettings();
             ApplyTheme();
             InitializeUI();
 
-            // Set up event handlers
-            this.PrimaryButtonClick += SettingsDialog_PrimaryButtonClick;
+            // Enable event handling after initialization
+            _isInitializing = false;
+
+            // Settings are auto-saved, no need for primary button
         }
 
         private void LoadCurrentSettings()
         {
-            _currentSettings = _settingsService.LoadSettings();
+            _currentSettings = _settingsService.CurrentSettings;
             Settings = _currentSettings.Clone();
         }
 
         private void ApplyTheme()
         {
-            var elementTheme = _currentSettings.Theme switch
+            var themeToApply = Settings?.Theme ?? _currentSettings.Theme;
+            var elementTheme = themeToApply switch
             {
                 AppTheme.Light => ElementTheme.Light,
                 AppTheme.Dark => ElementTheme.Dark,
@@ -78,8 +84,7 @@ namespace shutdown_timer.Dialogs
         private void LocalizeUI()
         {
             Title = _localizationService.GetString("Settings");
-            PrimaryButtonText = _localizationService.GetString("Save");
-            CloseButtonText = _localizationService.GetString("Cancel");
+            CloseButtonText = _localizationService.GetString("Close");
 
             // Localize all UI elements
             LanguageSettingsHeader.Text = _localizationService.GetString("LanguageSettings");
@@ -87,42 +92,54 @@ namespace shutdown_timer.Dialogs
             SystemDefaultRadio.Content = _localizationService.GetString("SystemDefault");
             LightThemeRadio.Content = _localizationService.GetString("LightTheme");
             DarkThemeRadio.Content = _localizationService.GetString("DarkTheme");
-            ResetSettingsHeader.Text = _localizationService.GetString("ResetSettings");
-            ResetSettingsButton.Content = _localizationService.GetString("ResetAllSettings");
         }
 
-        private void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+                private async void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_isInitializing) return;
+            
             if (LanguageComboBox.SelectedItem is ComboBoxItem item)
             {
-                Settings.Language = item.Tag.ToString();
+                Settings.Language = item.Tag?.ToString() ?? "ja";
+                // Auto-save settings
+                Settings.AutoSaveSchedule = true;
+                await _settingsService.SaveSettingsAsync(Settings);
+                _currentSettings = Settings.Clone();
+                
+                // Apply language change to this dialog immediately
+                _localizationService.SetLanguage(Settings.Language);
+                LocalizeUI();
+                
+                // Notify parent window of changes
+                _onSettingsChanged?.Invoke(Settings);
             }
         }
 
-        private void ThemeRadioButtons_SelectionChanged(object sender, SelectionChangedEventArgs e)
+                private async void ThemeRadioButtons_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_isInitializing) return;
+            
             if (ThemeRadioButtons.SelectedItem is RadioButton radio)
             {
                 if (Enum.TryParse<AppTheme>(radio.Tag.ToString(), out var theme))
                 {
                     Settings.Theme = theme;
+                    // Auto-save settings
+                    Settings.AutoSaveSchedule = true;
+                    await _settingsService.SaveSettingsAsync(Settings);
+                    _currentSettings = Settings.Clone();
+                    
+                    // Apply theme change to this dialog immediately
+                    ApplyTheme();
+                    
+                    // Notify parent window of changes
+                    _onSettingsChanged?.Invoke(Settings);
                 }
             }
         }
 
-        private void ResetSettingsButton_Click(object sender, RoutedEventArgs e)
-        {
-            Settings = new AppSettings();
-            InitializeUI();
-        }
 
-        private void SettingsDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
-        {
-                        // Auto-save is always enabled
-            Settings.AutoSaveSchedule = true;
 
-            // Save settings
-            _settingsService.SaveSettings(Settings);
-        }
+        // Settings are now auto-saved when changed, no need for primary button click handler
     }
 }

@@ -19,12 +19,20 @@ namespace shutdown_timer.Services
 
                 if (secondsUntilAction <= 0)
                 {
-                    throw new InvalidOperationException("指定された時刻は既に過ぎています");
+                    throw new InvalidOperationException("The specified time has already passed");
+                }
+
+                // Sleep requires special handling
+                if (config.ActionType == ActionType.Sleep)
+                {
+                    // For sleep, we schedule it using Task.Delay and then execute
+                    await Task.Delay(TimeSpan.FromSeconds(secondsUntilAction));
+                    return await ExecuteSleepAsync();
                 }
 
                 var arguments = GetShutdownArguments(config.ActionType, secondsUntilAction, config.ForceAction);
 
-                var psi = new ProcessStartInfo()
+                var psi = new ProcessStartInfo
                 {
                     FileName = "shutdown.exe",
                     Arguments = arguments,
@@ -33,19 +41,19 @@ namespace shutdown_timer.Services
                 };
 
                 var process = Process.Start(psi);
-                await process.WaitForExitAsync();
+                await process!.WaitForExitAsync();
 
-                if (process.ExitCode == 0)
+                if (process!.ExitCode == 0)
                 {
                     await SaveScheduleAsync(config);
                     return true;
                 }
                 else
                 {
-                    throw new InvalidOperationException($"シャットダウンコマンドが失敗しました (Exit Code: {process.ExitCode})");
+                    throw new InvalidOperationException($"Shutdown command failed (Exit Code: {process!.ExitCode})");
                 }
             }
-            catch (Exception)
+            catch
             {
                 throw;
             }
@@ -55,7 +63,7 @@ namespace shutdown_timer.Services
         {
             try
             {
-                var psi = new ProcessStartInfo()
+                var psi = new ProcessStartInfo
                 {
                     FileName = "shutdown.exe",
                     Arguments = "/a",
@@ -64,7 +72,7 @@ namespace shutdown_timer.Services
                 };
 
                 var process = Process.Start(psi);
-                await process.WaitForExitAsync();
+                await process!.WaitForExitAsync();
 
                 // Remove schedule file
                 if (File.Exists(SCHEDULE_FILE))
@@ -72,15 +80,15 @@ namespace shutdown_timer.Services
                     File.Delete(SCHEDULE_FILE);
                 }
 
-                return process.ExitCode == 0;
+                return process!.ExitCode == 0;
             }
-            catch (Exception)
+            catch
             {
                 throw;
             }
         }
 
-        public async Task<ShutdownConfig> LoadScheduleAsync()
+        public async Task<ShutdownConfig?> LoadScheduleAsync()
         {
             try
             {
@@ -91,7 +99,7 @@ namespace shutdown_timer.Services
                 var config = JsonSerializer.Deserialize<ShutdownConfig>(jsonString);
 
                 // Check if the schedule is still valid
-                if (config.TargetTime <= DateTime.Now)
+                if (config?.TargetTime <= DateTime.Now)
                 {
                     File.Delete(SCHEDULE_FILE);
                     return null;
@@ -99,7 +107,7 @@ namespace shutdown_timer.Services
 
                 return config;
             }
-            catch (Exception)
+            catch
             {
                 // If there's any error loading the schedule, delete the file and return null
                 if (File.Exists(SCHEDULE_FILE))
@@ -120,7 +128,7 @@ namespace shutdown_timer.Services
                 });
                 await File.WriteAllTextAsync(SCHEDULE_FILE, jsonString);
             }
-            catch (Exception)
+            catch
             {
                 // Ignore save errors - not critical
             }
@@ -135,17 +143,17 @@ namespace shutdown_timer.Services
                 ActionType.Shutdown => $"/s {forceFlag}/t {seconds}",
                 ActionType.Restart => $"/r {forceFlag}/t {seconds}",
                 ActionType.Logoff => $"/l {forceFlag}/t {seconds}",
-                ActionType.Sleep => throw new NotSupportedException("スリープはshutdown.exeではサポートされていません"),
-                _ => throw new ArgumentException("無効なアクションタイプです")
+                ActionType.Sleep => "", // Sleep is handled separately
+                _ => throw new ArgumentException("Invalid action type")
             };
         }
 
-        public async Task<bool> ExecuteSleepAsync()
+        private async Task<bool> ExecuteSleepAsync()
         {
             try
             {
                 // For sleep, we use a different approach
-                var psi = new ProcessStartInfo()
+                var psi = new ProcessStartInfo
                 {
                     FileName = "rundll32.exe",
                     Arguments = "powrprof.dll,SetSuspendState 0,1,0",
@@ -154,10 +162,10 @@ namespace shutdown_timer.Services
                 };
 
                 var process = Process.Start(psi);
-                await process.WaitForExitAsync();
-                return process.ExitCode == 0;
+                await process!.WaitForExitAsync();
+                return process!.ExitCode == 0;
             }
-            catch (Exception)
+            catch
             {
                 throw;
             }

@@ -146,7 +146,8 @@
 
                         <!-- Action Options -->
                         <StackPanel Spacing="12">
-                            <TextBlock Text="Action Options"
+                            <TextBlock x:Name="ActionOptionsHeader"
+                                     Text="Action Options"
                                      FontWeight="SemiBold"
                                      FontSize="14"/>
                             <RadioButtons x:Name="ActionTypeRadio" SelectedIndex="0">
@@ -185,7 +186,7 @@
                             MinWidth="120">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE711;"/>
-                            <TextBlock Text="Cancel"/>
+                            <TextBlock x:Name="CancelButtonText" Text="Cancel"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>

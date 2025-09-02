@@ -23,7 +23,7 @@ namespace shutdown_timer.Dialogs
 
         private void ApplyTheme()
         {
-            var settings = _settingsService.LoadSettings();
+            var settings = _settingsService.CurrentSettings;
             var elementTheme = settings.Theme switch
             {
                 AppTheme.Light => ElementTheme.Light,
@@ -39,7 +39,7 @@ namespace shutdown_timer.Dialogs
         {
             // Get version from assembly
             var version = Assembly.GetExecutingAssembly().GetName().Version;
-            var versionString = $"{version.Major}.{version.Minor}.{version.Build}";
+            var versionString = version != null ? $"{version.Major}.{version.Minor}.{version.Build}" : "1.0.0";
 
             // Localize and set content
             Title = _localizationService.GetString("About");

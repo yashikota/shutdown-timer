@@ -8,7 +8,7 @@ namespace shutdown_timer.Services
 {
     public class SettingsService
     {
-        private static SettingsService _instance;
+        private static SettingsService _instance = null!;
         public static SettingsService Instance => _instance ??= new SettingsService();
 
         private const string SETTINGS_FILE = "app_settings.json";
@@ -16,10 +16,10 @@ namespace shutdown_timer.Services
 
         private SettingsService()
         {
-            _currentSettings = LoadSettings();
+            _currentSettings = LoadSettingsSync();
         }
 
-        public AppSettings LoadSettings()
+        private AppSettings LoadSettingsSync()
         {
             try
             {
@@ -30,7 +30,7 @@ namespace shutdown_timer.Services
                     return settings ?? new AppSettings();
                 }
             }
-            catch (Exception)
+            catch
             {
                 // If there's any error loading settings, return default settings
             }
@@ -49,29 +49,12 @@ namespace shutdown_timer.Services
                     return settings ?? new AppSettings();
                 }
             }
-            catch (Exception)
+            catch
             {
                 // If there's any error loading settings, return default settings
             }
 
             return new AppSettings();
-        }
-
-        public void SaveSettings(AppSettings settings)
-        {
-            try
-            {
-                var jsonString = JsonSerializer.Serialize(settings, new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                });
-                File.WriteAllText(SETTINGS_FILE, jsonString);
-                _currentSettings = settings.Clone();
-            }
-            catch (Exception)
-            {
-                // Ignore save errors - not critical
-            }
         }
 
         public async Task SaveSettingsAsync(AppSettings settings)
@@ -85,7 +68,7 @@ namespace shutdown_timer.Services
                 await File.WriteAllTextAsync(SETTINGS_FILE, jsonString);
                 _currentSettings = settings.Clone();
             }
-            catch (Exception)
+            catch
             {
                 // Ignore save errors - not critical
             }
@@ -93,7 +76,7 @@ namespace shutdown_timer.Services
 
         public AppSettings CurrentSettings => _currentSettings.Clone();
 
-        public void UpdateLastUsedSettings(TimerMode mode, int hours, int minutes, int seconds,
+        public async Task UpdateLastUsedSettingsAsync(TimerMode mode, int hours, int minutes, int seconds,
             TimeSpan specificTime, ActionType actionType, bool forceAction)
         {
             if (_currentSettings.RememberLastSettings)
@@ -106,17 +89,13 @@ namespace shutdown_timer.Services
                 _currentSettings.LastActionType = actionType;
                 _currentSettings.LastForceAction = forceAction;
 
-                SaveSettings(_currentSettings);
+                await SaveSettingsAsync(_currentSettings);
             }
         }
 
-        public void ResetSettings()
-        {
-            _currentSettings = new AppSettings();
-            SaveSettings(_currentSettings);
-        }
 
-        public event EventHandler<AppSettings> SettingsChanged;
+
+        public event EventHandler<AppSettings>? SettingsChanged;
 
         protected virtual void OnSettingsChanged(AppSettings settings)
         {

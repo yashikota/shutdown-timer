@@ -25,10 +25,26 @@ namespace shutdown_timer
             _localization = LocalizationService.Instance;
             _settingsService = SettingsService.Instance;
 
+            // Apply saved language setting before UI initialization
+            var settings = _settingsService.CurrentSettings;
+            _localization.SetLanguage(settings.Language);
+
             SetupWindow();
             InitializeUI();
             SetupEventHandlers();
-            LoadSavedSchedule();
+
+            // Load saved schedule after window is fully initialized
+            this.Activated += MainWindow_Activated;
+        }
+
+        private async void MainWindow_Activated(object sender, WindowActivatedEventArgs e)
+        {
+            if (e.WindowActivationState != WindowActivationState.Deactivated)
+            {
+                // Only load once when first activated
+                this.Activated -= MainWindow_Activated;
+                await LoadSavedScheduleAsync();
+            }
         }
 
         private void SetupWindow()
@@ -54,7 +70,9 @@ namespace shutdown_timer
             SecondsInput.Header = _localization.GetString("Seconds");
             ShutdownTimePicker.Header = _localization.GetString("ShutdownAt");
             StartButtonText.Text = _localization.GetString("Start");
+            CancelButtonText.Text = _localization.GetString("Cancel");
             StatusText.Text = _localization.GetString("Ready");
+            ActionOptionsHeader.Text = _localization.GetString("ShutdownOptions");
 
 
 
@@ -76,7 +94,7 @@ namespace shutdown_timer
             _viewModel.PropertyChanged += ViewModel_PropertyChanged;
         }
 
-        private async void LoadSavedSchedule()
+        private async Task LoadSavedScheduleAsync()
         {
             try
             {
@@ -118,7 +136,7 @@ namespace shutdown_timer
             }
         }
 
-        private void ViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             switch (e.PropertyName)
             {
@@ -153,8 +171,8 @@ namespace shutdown_timer
         {
             StartButton.IsEnabled = false;
             CancelButton.IsEnabled = true;
-            StartButtonIcon.Glyph = "\uE769"; // Pause icon
-            StartButtonText.Text = _localization.GetString("Cancel");
+            StartButtonIcon.Glyph = "\uE768"; // Keep Play icon but disabled
+            StartButtonText.Text = _localization.GetString("Start"); // Keep original text
 
             // Disable input controls
             ModeSelectorBar.IsEnabled = false;
@@ -359,7 +377,7 @@ namespace shutdown_timer
 
                 if (duration.TotalSeconds == 0)
                 {
-                    throw new InvalidOperationException("時間を設定してください");
+                    throw new InvalidOperationException(_localization.GetString("SetTime"));
                 }
 
                 return ShutdownConfig.CreateFromDuration(duration, actionType, forceAction);
@@ -368,7 +386,7 @@ namespace shutdown_timer
             {
                 if (ShutdownTimePicker.SelectedTime == null)
                 {
-                    throw new InvalidOperationException("時刻を設定してください");
+                    throw new InvalidOperationException(_localization.GetString("SetTime"));
                 }
 
                 return ShutdownConfig.CreateFromTime(ShutdownTimePicker.SelectedTime.Value, actionType, forceAction);
@@ -377,16 +395,16 @@ namespace shutdown_timer
 
         private async void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            var settingsDialog = new Dialogs.SettingsDialog();
+            var settingsDialog = new Dialogs.SettingsDialog(OnSettingsChanged);
             settingsDialog.XamlRoot = this.Content.XamlRoot;
 
-            var result = await settingsDialog.ShowAsync();
+            await settingsDialog.ShowAsync();
+        }
 
-            if (result == ContentDialogResult.Primary)
-            {
-                // Settings were saved, apply changes
-                ApplySettings(settingsDialog.Settings);
-            }
+        private void OnSettingsChanged(AppSettings settings)
+        {
+            // Apply settings immediately when changed
+            ApplySettings(settings);
         }
 
         private async void InfoButton_Click(object sender, RoutedEventArgs e)
@@ -399,12 +417,9 @@ namespace shutdown_timer
 
         private void ApplySettings(AppSettings settings)
         {
-            // Apply language change
-            if (settings.Language != _localization.CurrentLanguage)
-            {
-                _localization.SetLanguage(settings.Language);
-                InitializeUI(); // Re-initialize UI with new language
-            }
+            // Always apply language change (force update)
+            _localization.SetLanguage(settings.Language);
+            InitializeUI(); // Re-initialize UI with new language
 
             // Apply theme change
             ApplyTheme(settings.Theme);
@@ -441,119 +456,98 @@ namespace shutdown_timer
 
                 private void RefreshTimePickerTheme(ElementTheme theme)
         {
-            if (ShutdownTimePicker != null)
+            // Recreate TimePicker with proper theme
+            this.DispatcherQueue.TryEnqueue(() =>
             {
-                // Store current value
-                var currentTime = ShutdownTimePicker.SelectedTime;
-
-                // Apply theme to TimePicker
-                ShutdownTimePicker.RequestedTheme = theme;
-
-                // Force refresh by temporarily changing visibility
-                ShutdownTimePicker.Visibility = Visibility.Collapsed;
-                ShutdownTimePicker.Visibility = Visibility.Visible;
-
-                // Restore value
-                ShutdownTimePicker.SelectedTime = currentTime;
-            }
+                RecreateTimePicker(theme);
+            });
 
             // Also refresh NumberBox controls
             RefreshNumberBoxTheme(theme);
         }
 
-                        private void RefreshNumberBoxTheme(ElementTheme theme)
+        private void RecreateTimePicker(ElementTheme theme)
         {
-            // Store current values
-            var hoursValue = HoursInput?.Value ?? 0;
-            var minutesValue = MinutesInput?.Value ?? 0;
-            var secondsValue = SecondsInput?.Value ?? 0;
+            if (ShutdownTimePicker?.Parent is Panel parent)
+            {
+                // Store current values
+                var currentTime = ShutdownTimePicker.SelectedTime;
+                var currentHeader = ShutdownTimePicker.Header;
+                var currentMargin = ShutdownTimePicker.Margin;
+                var currentName = ShutdownTimePicker.Name;
 
-            // Store headers
-            var hoursHeader = HoursInput?.Header;
-            var minutesHeader = MinutesInput?.Header;
-            var secondsHeader = SecondsInput?.Header;
+                // Remove old control
+                parent.Children.Remove(ShutdownTimePicker);
 
-            // Use dispatcher to recreate NumberBoxes with proper theme
+                // Create new control with proper theme
+                var newTimePicker = new TimePicker
+                {
+                    Name = currentName,
+                    Header = currentHeader,
+                    SelectedTime = currentTime,
+                    RequestedTheme = theme,
+                    Margin = currentMargin
+                };
+
+                // Add event handler
+                newTimePicker.SelectedTimeChanged += ShutdownTimePicker_SelectedTimeChanged;
+
+                // Add to parent
+                parent.Children.Add(newTimePicker);
+
+                // Update reference
+                ShutdownTimePicker = newTimePicker;
+            }
+        }
+
+        private void RefreshNumberBoxTheme(ElementTheme theme)
+        {
+            // Recreate NumberBox controls with proper theme
             this.DispatcherQueue.TryEnqueue(() =>
             {
-                // Recreate HoursInput
-                if (HoursInput != null)
-                {
-                    var parent = HoursInput.Parent as Panel;
-                    var index = parent?.Children.IndexOf(HoursInput) ?? -1;
-                    if (parent != null && index >= 0)
-                    {
-                        parent.Children.RemoveAt(index);
-                        var newHoursInput = new NumberBox
-                        {
-                            Name = "HoursInput",
-                            Header = hoursHeader,
-                            Value = hoursValue,
-                            Minimum = 0,
-                            Maximum = 23,
-                            SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact,
-                            RequestedTheme = theme,
-                            Margin = new Thickness(0, 0, 8, 0)
-                        };
-                        Grid.SetColumn(newHoursInput, 0);
-                        newHoursInput.ValueChanged += TimeInput_ValueChanged;
-                        parent.Children.Insert(index, newHoursInput);
-                        HoursInput = newHoursInput;
-                    }
-                }
-
-                // Recreate MinutesInput
-                if (MinutesInput != null)
-                {
-                    var parent = MinutesInput.Parent as Panel;
-                    var index = parent?.Children.IndexOf(MinutesInput) ?? -1;
-                    if (parent != null && index >= 0)
-                    {
-                        parent.Children.RemoveAt(index);
-                        var newMinutesInput = new NumberBox
-                        {
-                            Name = "MinutesInput",
-                            Header = minutesHeader,
-                            Value = minutesValue,
-                            Minimum = 0,
-                            Maximum = 59,
-                            SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact,
-                            RequestedTheme = theme,
-                            Margin = new Thickness(8, 0, 8, 0)
-                        };
-                        Grid.SetColumn(newMinutesInput, 1);
-                        newMinutesInput.ValueChanged += TimeInput_ValueChanged;
-                        parent.Children.Insert(index, newMinutesInput);
-                        MinutesInput = newMinutesInput;
-                    }
-                }
-
-                // Recreate SecondsInput
-                if (SecondsInput != null)
-                {
-                    var parent = SecondsInput.Parent as Panel;
-                    var index = parent?.Children.IndexOf(SecondsInput) ?? -1;
-                    if (parent != null && index >= 0)
-                    {
-                        parent.Children.RemoveAt(index);
-                        var newSecondsInput = new NumberBox
-                        {
-                            Name = "SecondsInput",
-                            Header = secondsHeader,
-                            Value = secondsValue,
-                            Minimum = 0,
-                            Maximum = 59,
-                            SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact,
-                            RequestedTheme = theme,
-                            Margin = new Thickness(8, 0, 0, 0)
-                        };
-                        Grid.SetColumn(newSecondsInput, 2);
-                        newSecondsInput.ValueChanged += TimeInput_ValueChanged;
-                        parent.Children.Insert(index, newSecondsInput);
-                        SecondsInput = newSecondsInput;
-                    }
-                }
+                RecreateNumberBox(ref HoursInput, "HoursInput", 0, 23, 0, theme);
+                RecreateNumberBox(ref MinutesInput, "MinutesInput", 0, 59, 1, theme);
+                RecreateNumberBox(ref SecondsInput, "SecondsInput", 0, 59, 2, theme);
             });
+        }
+
+        private void RecreateNumberBox(ref NumberBox numberBox, string name, int min, int max, int gridColumn, ElementTheme theme)
+        {
+            if (numberBox?.Parent is Panel parent)
+            {
+                // Store current values
+                var currentValue = numberBox.Value;
+                var currentHeader = numberBox.Header;
+                var currentMargin = numberBox.Margin;
+
+                // Remove old control
+                parent.Children.Remove(numberBox);
+
+                // Create new control with proper theme
+                var newNumberBox = new NumberBox
+                {
+                    Name = name,
+                    Header = currentHeader,
+                    Value = currentValue,
+                    Minimum = min,
+                    Maximum = max,
+                    SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact,
+                    RequestedTheme = theme,
+                    Margin = currentMargin
+                };
+
+                // Set grid column
+                Grid.SetColumn(newNumberBox, gridColumn);
+
+                // Add event handler
+                newNumberBox.ValueChanged += TimeInput_ValueChanged;
+
+                // Add to parent
+                parent.Children.Add(newNumberBox);
+
+                // Update reference
+                numberBox = newNumberBox;
+            }
         }
 
         private void UpdateTitleWithCountdown()

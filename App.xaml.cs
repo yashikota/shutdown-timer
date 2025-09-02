@@ -26,6 +26,6 @@ namespace shutdown_timer
 			_mWindow.Activate();
 		}
 
-		private Window _mWindow;
+		private Window? _mWindow;
 	}
 }

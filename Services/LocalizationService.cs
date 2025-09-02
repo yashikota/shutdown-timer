@@ -6,7 +6,7 @@ namespace shutdown_timer.Services
 {
     public class LocalizationService
     {
-        private static LocalizationService _instance;
+        private static LocalizationService _instance = null!;
         public static LocalizationService Instance => _instance ??= new LocalizationService();
 
         private readonly Dictionary<string, Dictionary<string, string>> _resources;
@@ -59,10 +59,7 @@ namespace shutdown_timer.Services
                     ["ExecutingLogoff"] = "Executing logoff...",
                     ["Cancelled"] = "Cancelled",
                     ["Error"] = "Error: {0}",
-                    ["Settings"] = "Settings",
-                    ["About"] = "About",
                     ["Save"] = "Save",
-                    ["Cancel"] = "Cancel",
                     ["Close"] = "Close",
                     ["Version"] = "Version {0}",
                     ["LanguageSettings"] = "Language Settings",
@@ -84,8 +81,7 @@ namespace shutdown_timer.Services
                     ["ConfirmOnExit"] = "Confirm when exiting app",
                     ["AutoSaveSchedule"] = "Auto-save schedule",
                     ["ShowCountdownInTitle"] = "Show countdown in title bar",
-                    ["ResetSettings"] = "Reset",
-                    ["ResetAllSettings"] = "Reset settings",
+
                     ["AppDescription"] = "Shutdown Timer is an application that allows you to automatically shutdown, restart, sleep, or log off your computer at a specified time or duration.\n\nIt helps automate daily tasks with simple operations, contributing to energy savings and improved work efficiency.",
                     ["MainFeatures"] = "Main Features",
                     ["Feature1"] = "• Timer setting with duration (hours, minutes, seconds)",
@@ -119,9 +115,7 @@ namespace shutdown_timer.Services
                     ["Overview"] = "Overview",
                     ["SetTime"] = "Set time",
                     ["WillExecuteIn"] = "Will execute in {0}",
-                    ["WillExecuteAt"] = "Will execute at {0}",
-                    ["Today"] = "today",
-                    ["Tomorrow"] = "tomorrow"
+                    ["WillExecuteAt"] = "Will execute at {0}"
                 },
                 ["ja"] = new()
                 {
@@ -133,7 +127,7 @@ namespace shutdown_timer.Services
                     ["Seconds"] = "秒",
                     ["ShutdownAt"] = "シャットダウン時刻",
                     ["Start"] = "開始",
-                    ["Cancel"] = "中止",
+                    ["Cancel"] = "キャンセル",
                     ["Ready"] = "準備完了",
                     ["QuickPresets"] = "クイックプリセット",
                     ["ShutdownOptions"] = "シャットダウンオプション",
@@ -158,10 +152,7 @@ namespace shutdown_timer.Services
                     ["ExecutingLogoff"] = "ログオフを実行します",
                     ["Cancelled"] = "キャンセルしました",
                     ["Error"] = "エラー: {0}",
-                    ["Settings"] = "設定",
-                    ["About"] = "情報",
                     ["Save"] = "保存",
-                    ["Cancel"] = "キャンセル",
                     ["Close"] = "閉じる",
                     ["Version"] = "バージョン {0}",
                     ["LanguageSettings"] = "言語設定",
@@ -183,8 +174,7 @@ namespace shutdown_timer.Services
                     ["ConfirmOnExit"] = "アプリ終了時に確認する",
                     ["AutoSaveSchedule"] = "スケジュールを自動保存",
                     ["ShowCountdownInTitle"] = "タイトルバーにカウントダウンを表示",
-                    ["ResetSettings"] = "リセット",
-                    ["ResetAllSettings"] = "設定をリセット",
+
                     ["AppDescription"] = "シャットダウンタイマーは、指定した時間または時刻にコンピューターを自動的にシャットダウン、再起動、スリープ、またはログオフできるアプリケーションです。\n\n簡単な操作で日常的なタスクを自動化し、エネルギーの節約や作業効率の向上に役立ちます。",
                     ["MainFeatures"] = "主な機能",
                     ["Feature1"] = "• 時間指定（時間・分・秒）でのタイマー設定",

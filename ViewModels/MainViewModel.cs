@@ -11,26 +11,30 @@ namespace shutdown_timer.ViewModels
     public class MainViewModel : INotifyPropertyChanged
     {
         private readonly ShutdownService _shutdownService;
+        private readonly LocalizationService _localizationService;
         private readonly DispatcherQueue _dispatcherQueue;
         private readonly DispatcherQueueTimer _countdownTimer;
 
         private bool _isTimerActive;
         private DateTime _targetTime;
-        private string _statusMessage = "準備完了";
+        private string _statusMessage;
         private string _countdownText = "";
         private bool _countdownVisible;
 
         public MainViewModel()
         {
             _shutdownService = new ShutdownService();
+            _localizationService = LocalizationService.Instance;
             _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
             _countdownTimer = _dispatcherQueue.CreateTimer();
             _countdownTimer.Interval = TimeSpan.FromSeconds(1);
             _countdownTimer.Tick += CountdownTimer_Tick;
+
+            _statusMessage = _localizationService.GetString("Ready");
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public bool IsTimerActive
         {
@@ -73,7 +77,7 @@ namespace shutdown_timer.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"エラー: {ex.Message}";
+                StatusMessage = _localizationService.GetString("Error", ex.Message);
                 return false;
             }
         }
@@ -87,14 +91,14 @@ namespace shutdown_timer.ViewModels
                 {
                     IsTimerActive = false;
                     CountdownVisible = false;
-                    StatusMessage = "キャンセルしました";
+                    StatusMessage = _localizationService.GetString("Cancelled");
                     _countdownTimer.Stop();
                 }
                 return success;
             }
             catch (Exception ex)
             {
-                StatusMessage = $"エラー: {ex.Message}";
+                StatusMessage = _localizationService.GetString("Error", ex.Message);
                 return false;
             }
         }
@@ -108,7 +112,7 @@ namespace shutdown_timer.ViewModels
                 _countdownTimer.Stop();
                 CountdownVisible = false;
                 IsTimerActive = false;
-                StatusMessage = "実行中...";
+                StatusMessage = GetActionMessage(ActionType.Shutdown);
                 return;
             }
 
@@ -117,9 +121,14 @@ namespace shutdown_timer.ViewModels
 
         private string FormatTimeSpan(TimeSpan timeSpan)
         {
+            var isJapanese = _localizationService.CurrentLanguage == "ja";
+
             if (timeSpan.TotalDays >= 1)
             {
-                return $"{(int)timeSpan.TotalDays}日 {timeSpan.Hours:D2}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
+                if (isJapanese)
+                    return $"{(int)timeSpan.TotalDays}日 {timeSpan.Hours:D2}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
+                else
+                    return $"{(int)timeSpan.TotalDays}d {timeSpan.Hours:D2}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
             }
             else if (timeSpan.TotalHours >= 1)
             {
@@ -135,20 +144,20 @@ namespace shutdown_timer.ViewModels
         {
             return actionType switch
             {
-                ActionType.Shutdown => "シャットダウンを実行します",
-                ActionType.Restart => "再起動を実行します",
-                ActionType.Sleep => "スリープを実行します",
-                ActionType.Logoff => "ログオフを実行します",
-                _ => "アクションを実行します"
+                ActionType.Shutdown => _localizationService.GetString("ExecutingShutdown"),
+                ActionType.Restart => _localizationService.GetString("ExecutingRestart"),
+                ActionType.Sleep => _localizationService.GetString("ExecutingSleep"),
+                ActionType.Logoff => _localizationService.GetString("ExecutingLogoff"),
+                _ => _localizationService.GetString("ExecutingShutdown")
             };
         }
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
         {
             if (Equals(field, value)) return false;
             field = value;
