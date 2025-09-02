@@ -216,16 +216,31 @@
                 <StackPanel x:Name="CountdownPanel"
                            Grid.Column="1"
                            Orientation="Horizontal"
-                           Spacing="8"
+                           Spacing="6"
+                           VerticalAlignment="Center"
                            Visibility="Collapsed">
                     <FontIcon FontFamily="Segoe Fluent Icons"
                              Glyph="&#xE916;"
-                             FontSize="16"
-                             Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+                             FontSize="14"
+                             Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                             VerticalAlignment="Bottom"
+                             Margin="0,0,0,1"/>
                     <TextBlock x:Name="CountdownDisplay"
                               FontSize="14"
                               FontWeight="SemiBold"
-                              Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+                              Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                              VerticalAlignment="Bottom"/>
+                    <FontIcon FontFamily="Segoe Fluent Icons"
+                             Glyph="&#xE121;"
+                             FontSize="14"
+                             Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                             VerticalAlignment="Bottom"
+                             Margin="12,0,0,1"/>
+                    <TextBlock x:Name="TargetTimeDisplay"
+                              FontSize="14"
+                              FontWeight="SemiBold"
+                              Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                              VerticalAlignment="Bottom"/>
                 </StackPanel>
             </Grid>
         </Border>

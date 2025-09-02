@@ -19,6 +19,7 @@ namespace shutdown_timer.ViewModels
         private DateTime _targetTime;
         private string _statusMessage;
         private string _countdownText = "";
+        private string _targetTimeText = "";
         private bool _countdownVisible;
 
         public MainViewModel()
@@ -54,6 +55,12 @@ namespace shutdown_timer.ViewModels
             set => SetProperty(ref _countdownText, value);
         }
 
+        public string TargetTimeText
+        {
+            get => _targetTimeText;
+            set => SetProperty(ref _targetTimeText, value);
+        }
+
         public bool CountdownVisible
         {
             get => _countdownVisible;
@@ -71,6 +78,7 @@ namespace shutdown_timer.ViewModels
                     IsTimerActive = true;
                     CountdownVisible = true;
                     StatusMessage = GetActionMessage(config.ActionType);
+                    UpdateTargetTimeDisplay();
                     _countdownTimer.Start();
                 }
                 return success;
@@ -80,6 +88,17 @@ namespace shutdown_timer.ViewModels
                 StatusMessage = _localizationService.GetString("Error", ex.Message);
                 return false;
             }
+        }
+
+        public void RestoreTimerState(ShutdownConfig config)
+        {
+            // Restore timer state without re-scheduling shutdown command
+            _targetTime = config.TargetTime;
+            IsTimerActive = true;
+            CountdownVisible = true;
+            StatusMessage = GetActionMessage(config.ActionType);
+            UpdateTargetTimeDisplay();
+            _countdownTimer.Start();
         }
 
         public async Task<bool> CancelShutdownAsync()
@@ -137,6 +156,21 @@ namespace shutdown_timer.ViewModels
             else
             {
                 return $"{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
+            }
+        }
+
+        private void UpdateTargetTimeDisplay()
+        {
+            var targetTimeText = _targetTime.ToString("HH:mm");
+
+            // Check if target time is tomorrow
+            if (_targetTime.Date > DateTime.Now.Date)
+            {
+                TargetTimeText = $"明日 {targetTimeText}";
+            }
+            else
+            {
+                TargetTimeText = targetTimeText;
             }
         }
 

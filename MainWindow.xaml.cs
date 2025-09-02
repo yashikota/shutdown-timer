@@ -125,14 +125,34 @@ namespace shutdown_timer
                     ActionTypeRadio.SelectedIndex = (int)savedConfig.ActionType;
                     ForceShutdownCheck.IsChecked = savedConfig.ForceAction;
 
-                    // Start the timer with saved config
-                    await _viewModel.StartShutdownAsync(savedConfig);
-                    UpdateUIForActiveTimer();
+                    // Check if the scheduled time is still in the future
+                    if (savedConfig.TargetTime > DateTime.Now)
+                    {
+                        // Only restore the timer state without re-scheduling shutdown
+                        _viewModel.RestoreTimerState(savedConfig);
+                        UpdateUIForActiveTimer();
+                    }
+                    else
+                    {
+                        // Schedule has expired, clean up
+                        await shutdownService.CancelShutdownAsync();
+                    }
                 }
             }
             catch (Exception ex)
             {
                 StatusText.Text = _localization.GetString("Error", ex.Message);
+
+                // If there's an error (like exit code 1190), try to cancel any existing shutdown
+                try
+                {
+                    var shutdownService = new ShutdownService();
+                    await shutdownService.CancelShutdownAsync();
+                }
+                catch
+                {
+                    // Ignore cancel errors
+                }
             }
         }
 
@@ -145,6 +165,9 @@ namespace shutdown_timer
                     break;
                 case nameof(_viewModel.CountdownText):
                     CountdownDisplay.Text = _viewModel.CountdownText;
+                    break;
+                case nameof(_viewModel.TargetTimeText):
+                    TargetTimeDisplay.Text = _viewModel.TargetTimeText;
                     break;
                 case nameof(_viewModel.CountdownVisible):
                     CountdownPanel.Visibility = _viewModel.CountdownVisible ? Visibility.Visible : Visibility.Collapsed;
@@ -178,6 +201,12 @@ namespace shutdown_timer
             ModeSelectorBar.IsEnabled = false;
             ActionTypeRadio.IsEnabled = false;
             ForceShutdownCheck.IsEnabled = false;
+
+            // Disable time input controls
+            HoursInput.IsEnabled = false;
+            MinutesInput.IsEnabled = false;
+            SecondsInput.IsEnabled = false;
+            ShutdownTimePicker.IsEnabled = false;
         }
 
         private void UpdateUIForInactiveTimer()
@@ -191,6 +220,12 @@ namespace shutdown_timer
             ModeSelectorBar.IsEnabled = true;
             ActionTypeRadio.IsEnabled = true;
             ForceShutdownCheck.IsEnabled = true;
+
+            // Enable time input controls
+            HoursInput.IsEnabled = true;
+            MinutesInput.IsEnabled = true;
+            SecondsInput.IsEnabled = true;
+            ShutdownTimePicker.IsEnabled = true;
         }
 
         private async void StartButton_Click(object sender, RoutedEventArgs e)

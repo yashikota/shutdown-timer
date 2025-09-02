@@ -48,6 +48,25 @@ namespace shutdown_timer.Services
                     await SaveScheduleAsync(config);
                     return true;
                 }
+                else if (process!.ExitCode == 1190)
+                {
+                    // Shutdown already scheduled - try to cancel first, then reschedule
+                    await CancelShutdownAsync();
+
+                    // Retry scheduling after cancellation
+                    var retryProcess = Process.Start(psi);
+                    await retryProcess!.WaitForExitAsync();
+
+                    if (retryProcess!.ExitCode == 0)
+                    {
+                        await SaveScheduleAsync(config);
+                        return true;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException($"Shutdown command failed after retry (Exit Code: {retryProcess!.ExitCode})");
+                    }
+                }
                 else
                 {
                     throw new InvalidOperationException($"Shutdown command failed (Exit Code: {process!.ExitCode})");
@@ -74,16 +93,30 @@ namespace shutdown_timer.Services
                 var process = Process.Start(psi);
                 await process!.WaitForExitAsync();
 
-                // Remove schedule file
+                // Always remove schedule file regardless of shutdown command result
+                // This ensures cleanup even if no shutdown was scheduled
                 if (File.Exists(SCHEDULE_FILE))
                 {
                     File.Delete(SCHEDULE_FILE);
                 }
 
-                return process!.ExitCode == 0;
+                // Return true if shutdown was cancelled successfully OR if no shutdown was scheduled (exit code 1116)
+                return process!.ExitCode == 0 || process!.ExitCode == 1116;
             }
             catch
             {
+                // If cancel fails, still try to clean up the schedule file
+                try
+                {
+                    if (File.Exists(SCHEDULE_FILE))
+                    {
+                        File.Delete(SCHEDULE_FILE);
+                    }
+                }
+                catch
+                {
+                    // Ignore file deletion errors
+                }
                 throw;
             }
         }
