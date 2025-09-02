@@ -22,15 +22,7 @@ namespace shutdown_timer.Services
                     throw new InvalidOperationException("The specified time has already passed");
                 }
 
-                // Sleep requires special handling
-                if (config.ActionType == ActionType.Sleep)
-                {
-                    // For sleep, we schedule it using Task.Delay and then execute
-                    await Task.Delay(TimeSpan.FromSeconds(secondsUntilAction));
-                    return await ExecuteSleepAsync();
-                }
-
-                var arguments = GetShutdownArguments(config.ActionType, secondsUntilAction, config.ForceAction);
+                                var arguments = GetShutdownArguments(config.ActionType, secondsUntilAction, config.ForceAction);
 
                 var psi = new ProcessStartInfo
                 {
@@ -175,33 +167,10 @@ namespace shutdown_timer.Services
             {
                 ActionType.Shutdown => $"/s {forceFlag}/t {seconds}",
                 ActionType.Restart => $"/r {forceFlag}/t {seconds}",
-                ActionType.Logoff => $"/l {forceFlag}/t {seconds}",
-                ActionType.Sleep => "", // Sleep is handled separately
                 _ => throw new ArgumentException("Invalid action type")
             };
         }
 
-        private async Task<bool> ExecuteSleepAsync()
-        {
-            try
-            {
-                // For sleep, we use a different approach
-                var psi = new ProcessStartInfo
-                {
-                    FileName = "rundll32.exe",
-                    Arguments = "powrprof.dll,SetSuspendState 0,1,0",
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
 
-                var process = Process.Start(psi);
-                await process!.WaitForExitAsync();
-                return process!.ExitCode == 0;
-            }
-            catch
-            {
-                throw;
-            }
-        }
     }
 }

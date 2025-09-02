@@ -180,8 +180,6 @@ namespace shutdown_timer.ViewModels
             {
                 ActionType.Shutdown => _localizationService.GetString("ExecutingShutdown"),
                 ActionType.Restart => _localizationService.GetString("ExecutingRestart"),
-                ActionType.Sleep => _localizationService.GetString("ExecutingSleep"),
-                ActionType.Logoff => _localizationService.GetString("ExecutingLogoff"),
                 _ => _localizationService.GetString("ExecutingShutdown")
             };
         }

@@ -5,9 +5,7 @@ namespace shutdown_timer.Models
     public enum ActionType
     {
         Shutdown,
-        Restart,
-        Sleep,
-        Logoff
+        Restart
     }
 
     public enum TimerMode

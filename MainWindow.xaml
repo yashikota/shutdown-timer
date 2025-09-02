@@ -153,8 +153,6 @@
                             <RadioButtons x:Name="ActionTypeRadio" SelectedIndex="0">
                                 <RadioButton Content="Shutdown" Tag="shutdown"/>
                                 <RadioButton Content="Restart" Tag="restart"/>
-                                <RadioButton Content="Sleep" Tag="sleep"/>
-                                <RadioButton Content="Logoff" Tag="logoff"/>
                             </RadioButtons>
                         </StackPanel>
 

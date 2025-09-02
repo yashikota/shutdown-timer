@@ -50,7 +50,7 @@ namespace shutdown_timer
         private void SetupWindow()
         {
 			SystemBackdrop = new MicaBackdrop();
-            AppWindow.Resize(new SizeInt32(700, 900));
+            AppWindow.Resize(new SizeInt32(700, 850));
 			AppWindow.SetIcon("Assets/timer.ico");
             Title = _localization.GetString("AppTitle");
 
@@ -79,8 +79,6 @@ namespace shutdown_timer
             // Localize action options
             ((RadioButton)ActionTypeRadio.Items[0]).Content = _localization.GetString("Shutdown");
             ((RadioButton)ActionTypeRadio.Items[1]).Content = _localization.GetString("Restart");
-            ((RadioButton)ActionTypeRadio.Items[2]).Content = _localization.GetString("Sleep");
-            ((RadioButton)ActionTypeRadio.Items[3]).Content = _localization.GetString("Logoff");
 
             ForceShutdownCheck.Content = _localization.GetString("ForceShutdown");
 
