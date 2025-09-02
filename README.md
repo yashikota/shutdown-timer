@@ -1,28 +1,48 @@
 # Shutdown Timer
 
-A modern and simple Windows shutdown timer application that allows you to automatically shut down your PC at a specific time or after a set duration.
+A modern Windows shutdown timer application. Schedule automatic shutdown or restart operations with an intuitive interface.
 
-https://github.com/user-attachments/assets/803cc122-d4c7-4eb1-b213-0d7de1975c48
+![Shutdown Timer](shutdown-timer.avif)
 
-## How to Use
+## ✨ Features
 
-1. Select Timer Mode
-   - "Specific Time": Schedule shutdown at a specific time
-   - "Duration": Set shutdown after a time period
+- **⏰ Flexible Timer Modes**
+  - Duration-based timer (hours, minutes, seconds)
+  - Specific time scheduling
+  - Real-time countdown and scheduled time display
 
-2. Set Time
-   - Specific Time mode: Select time using the clock picker
-   - Duration mode: Enter hours and minutes using number inputs
+- **🎯 System Actions**
+  - Shutdown
+  - Restart
+  - Force execution option (bypasses application save prompts)
 
-3. Click "Start Timer"
-   - Countdown begins
-   - Button changes to red "Cancel Shutdown"
+- **🌐 Multi-language Support**
+  - Japanese
+  - English
 
-4. To Cancel
-   - Click the "Cancel Shutdown" button
+- **💾 Smart Features**
+  - Dark/Light theme support
+  - Automatic schedule save/restore
 
-## Installation
+## 🚀 Installation
 
-1. Download the latest release from the releases page
-2. Run the installer
-3. Launch the application
+1. Visit the [Releases](https://github.com/yashikota/shutdown-timer/releases) page
+2. Download `shutdown-timer-{VERSION}-win-{ARCHITECTURE}.zip`
+3. Extract the ZIP file and run `shutdown-timer.exe`
+
+## 🎮 How to Use
+
+### Basic Usage
+
+1. **Select Timer Mode**
+   - **Duration**: Set timer for specific hours, minutes, and seconds
+   - **Specific Time**: Schedule for exact time
+
+2. **Configure Settings**
+   - Choose action type (Shutdown/Restart)
+   - Enable force execution if needed
+
+3. **Start Timer**
+   - Click "Start" to begin countdown
+   - Monitor remaining time and scheduled time in the status area
+   - Cancel anytime with "Cancel" button
