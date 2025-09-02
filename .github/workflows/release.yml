@@ -21,6 +21,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Get version from tag
+        id: version
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF -match '^refs/tags/v(.+)$') {
+            $version = $matches[1]
+          } else {
+            $version = "dev"
+          }
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+          echo "Version: $version"
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -46,25 +58,26 @@ jobs:
         shell: pwsh
         run: |
           $Rid = "${{ matrix.rid }}"
+          $Version = "${{ steps.version.outputs.VERSION }}"
           $pubDir = "publish\$Rid"
           if (-not (Test-Path $pubDir)) { throw "Publish directory not found: $pubDir" }
 
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          $dist = "dist\shutdown-timer-$Rid"
+          $dist = "dist\shutdown-timer-$Version-$Rid"
           if (Test-Path $dist) { Remove-Item $dist -Recurse -Force }
           New-Item -ItemType Directory -Force -Path $dist | Out-Null
 
           Copy-Item -Path (Join-Path $pubDir '*') -Destination $dist -Recurse -Force
 
-          $zip = "dist\shutdown-timer-$Rid.zip"
+          $zip = "dist\shutdown-timer-$Version-$Rid.zip"
           if (Test-Path $zip) { Remove-Item $zip -Force }
           Compress-Archive -Path (Join-Path $dist '*') -DestinationPath $zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: shutdown-timer-${{ matrix.rid }}
-          path: dist/shutdown-timer-${{ matrix.rid }}.zip
+          name: shutdown-timer-${{ steps.version.outputs.VERSION }}-${{ matrix.rid }}
+          path: dist/shutdown-timer-${{ steps.version.outputs.VERSION }}-${{ matrix.rid }}.zip
           if-no-files-found: error
 
   release:
