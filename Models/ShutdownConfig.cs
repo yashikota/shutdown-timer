@@ -16,12 +16,12 @@ namespace shutdown_timer.Models
 
     public class ShutdownConfig
     {
-        public DateTime TargetTime { get; set; }
-        public ActionType ActionType { get; set; } = ActionType.Shutdown;
-        public bool ForceAction { get; set; } = false;
-        public TimerMode Mode { get; set; } = TimerMode.Duration;
-        public TimeSpan Duration { get; set; }
-        public TimeSpan SpecificTime { get; set; }
+        public DateTime TargetTime { get; init; }
+        public ActionType ActionType { get; init; } = ActionType.Shutdown;
+        public bool ForceAction { get; init; }
+        public TimerMode Mode { get; init; } = TimerMode.Duration;
+        public TimeSpan Duration { get; init; }
+        public TimeSpan SpecificTime { get; init; }
 
         public static ShutdownConfig CreateFromDuration(TimeSpan duration, ActionType actionType = ActionType.Shutdown, bool force = false)
         {

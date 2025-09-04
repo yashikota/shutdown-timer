@@ -8,11 +8,10 @@ using shutdown_timer.Models;
 
 namespace shutdown_timer.ViewModels
 {
-    public class MainViewModel : INotifyPropertyChanged
+    public partial class MainViewModel : INotifyPropertyChanged
     {
         private readonly ShutdownService _shutdownService;
         private readonly LocalizationService _localizationService;
-        private readonly DispatcherQueue _dispatcherQueue;
         private readonly DispatcherQueueTimer _countdownTimer;
 
         private bool _isTimerActive;
@@ -26,9 +25,9 @@ namespace shutdown_timer.ViewModels
         {
             _shutdownService = new ShutdownService();
             _localizationService = LocalizationService.Instance;
-            _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+            var dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
-            _countdownTimer = _dispatcherQueue.CreateTimer();
+            _countdownTimer = dispatcherQueue.CreateTimer();
             _countdownTimer.Interval = TimeSpan.FromSeconds(1);
             _countdownTimer.Tick += CountdownTimer_Tick;
 
@@ -105,7 +104,7 @@ namespace shutdown_timer.ViewModels
         {
             try
             {
-                var success = await _shutdownService.CancelShutdownAsync();
+                var success = await ShutdownService.CancelShutdownAsync();
                 if (success)
                 {
                     IsTimerActive = false;
@@ -161,12 +160,14 @@ namespace shutdown_timer.ViewModels
 
         private void UpdateTargetTimeDisplay()
         {
-            var targetTimeText = _targetTime.ToString("HH:mm");
+            // Use natural time format (H:mm instead of HH:mm for single digit hours)
+            var targetTimeText = _targetTime.ToString("H:mm");
 
             // Check if target time is tomorrow
             if (_targetTime.Date > DateTime.Now.Date)
             {
-                TargetTimeText = $"明日 {targetTimeText}";
+                var tomorrowText = _localizationService.GetString("Tomorrow");
+                TargetTimeText = $"{tomorrowText} {targetTimeText}";
             }
             else
             {
@@ -184,7 +185,7 @@ namespace shutdown_timer.ViewModels
             };
         }
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

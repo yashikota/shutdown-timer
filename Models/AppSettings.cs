@@ -13,23 +13,23 @@ namespace shutdown_timer.Models
     {
         public string Language { get; set; } = "ja";
         public AppTheme Theme { get; set; } = AppTheme.Default;
-        public bool StartMinimized { get; set; } = false;
-        public bool RememberLastSettings { get; set; } = true;
-        public bool ShowNotifications { get; set; } = true;
-        public bool ShowWarningBeforeShutdown { get; set; } = true;
-        public int WarningTimeSeconds { get; set; } = 30;
-        public bool ConfirmOnExit { get; set; } = false;
+        public bool StartMinimized { get; init; }
+        public bool RememberLastSettings { get; init; } = true;
+        public bool ShowNotifications { get; init; } = true;
+        public bool ShowWarningBeforeShutdown { get; init; } = true;
+        public int WarningTimeSeconds { get; init; } = 30;
+        public bool ConfirmOnExit { get; init; }
         public bool AutoSaveSchedule { get; set; } = true;
-        public bool ShowCountdownInTitle { get; set; } = false;
+        public bool ShowCountdownInTitle { get; init; }
 
         // Last used settings (if RememberLastSettings is true)
         public TimerMode LastUsedMode { get; set; } = TimerMode.Duration;
-        public int LastHours { get; set; } = 0;
+        public int LastHours { get; set; }
         public int LastMinutes { get; set; } = 30;
-        public int LastSeconds { get; set; } = 0;
+        public int LastSeconds { get; set; }
         public TimeSpan LastSpecificTime { get; set; } = TimeSpan.Zero;
         public ActionType LastActionType { get; set; } = ActionType.Shutdown;
-        public bool LastForceAction { get; set; } = false;
+        public bool LastForceAction { get; set; }
 
         public AppSettings Clone()
         {

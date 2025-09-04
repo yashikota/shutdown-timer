@@ -1,6 +1,5 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Windows.Graphics;
 using System;
@@ -11,8 +10,8 @@ using shutdown_timer.Services;
 
 namespace shutdown_timer
 {
-	public sealed partial class MainWindow : Window
-	{
+	public sealed partial class MainWindow
+    {
         private readonly MainViewModel _viewModel;
         private readonly LocalizationService _localization;
         private readonly SettingsService _settingsService;
@@ -30,7 +29,7 @@ namespace shutdown_timer
             _localization.SetLanguage(settings.Language);
 
             SetupWindow();
-            InitializeUI();
+            InitializeUi();
             SetupEventHandlers();
 
             // Load saved schedule after window is fully initialized
@@ -39,12 +38,10 @@ namespace shutdown_timer
 
         private async void MainWindow_Activated(object sender, WindowActivatedEventArgs e)
         {
-            if (e.WindowActivationState != WindowActivationState.Deactivated)
-            {
-                // Only load once when first activated
-                this.Activated -= MainWindow_Activated;
-                await LoadSavedScheduleAsync();
-            }
+            if (e.WindowActivationState == WindowActivationState.Deactivated) return;
+            // Only load once when first activated
+            this.Activated -= MainWindow_Activated;
+            await LoadSavedScheduleAsync();
         }
 
         private void SetupWindow()
@@ -59,7 +56,7 @@ namespace shutdown_timer
             ApplyTheme(settings.Theme);
         }
 
-        private void InitializeUI()
+        private void InitializeUi()
         {
             // Localize UI elements
             HeaderText.Text = _localization.GetString("AppTitle");
@@ -111,9 +108,9 @@ namespace shutdown_timer
                         HoursInput.Value = duration.Hours;
                         MinutesInput.Value = duration.Minutes;
                         SecondsInput.Value = duration.Seconds;
-			}
-			else
-			{
+                    }
+                    else
+                    {
                         ModeSelectorBar.SelectedItem = SpecificTimeSelectorItem;
                         DurationModeContent.Visibility = Visibility.Collapsed;
                         SpecificTimeModeContent.Visibility = Visibility.Visible;
@@ -128,12 +125,12 @@ namespace shutdown_timer
                     {
                         // Only restore the timer state without re-scheduling shutdown
                         _viewModel.RestoreTimerState(savedConfig);
-                        UpdateUIForActiveTimer();
+                        UpdateUiForActiveTimer();
                     }
                     else
                     {
                         // Schedule has expired, clean up
-                        await shutdownService.CancelShutdownAsync();
+                        await ShutdownService.CancelShutdownAsync();
                     }
                 }
             }
@@ -145,7 +142,7 @@ namespace shutdown_timer
                 try
                 {
                     var shutdownService = new ShutdownService();
-                    await shutdownService.CancelShutdownAsync();
+                    await ShutdownService.CancelShutdownAsync();
                 }
                 catch
                 {
@@ -171,24 +168,24 @@ namespace shutdown_timer
                     CountdownPanel.Visibility = _viewModel.CountdownVisible ? Visibility.Visible : Visibility.Collapsed;
                     break;
                 case nameof(_viewModel.IsTimerActive):
-                    UpdateUIForTimerState();
+                    UpdateUiForTimerState();
                     break;
             }
         }
 
-        private void UpdateUIForTimerState()
+        private void UpdateUiForTimerState()
         {
             if (_viewModel.IsTimerActive)
             {
-                UpdateUIForActiveTimer();
+                UpdateUiForActiveTimer();
             }
             else
             {
-                UpdateUIForInactiveTimer();
+                UpdateUiForInactiveTimer();
             }
         }
 
-        private void UpdateUIForActiveTimer()
+        private void UpdateUiForActiveTimer()
         {
             StartButton.IsEnabled = false;
             CancelButton.IsEnabled = true;
@@ -207,7 +204,7 @@ namespace shutdown_timer
             ShutdownTimePicker.IsEnabled = false;
         }
 
-        private void UpdateUIForInactiveTimer()
+        private void UpdateUiForInactiveTimer()
         {
             StartButton.IsEnabled = true;
             CancelButton.IsEnabled = false;
@@ -291,7 +288,8 @@ namespace shutdown_timer
             var totalSeconds = hours * 3600 + minutes * 60 + seconds;
             if (totalSeconds == 0)
             {
-                DurationPreview.Text = _localization.GetString("SetTime");
+                // Show immediate shutdown message for 0:0:0
+                DurationPreview.Text = _localization.CurrentLanguage == "ja" ? "即座にシャットダウンします" : "Will shutdown immediately";
 				return;
 			}
 
@@ -301,32 +299,24 @@ namespace shutdown_timer
             var durationText = FormatDuration(duration);
             var timeText = $"({targetTime:HH:mm})";
 
-            if (_localization.CurrentLanguage == "ja")
-            {
-                DurationPreview.Text = $"{durationText}後 {timeText} にシャットダウンします";
-            }
-            else
-            {
-                DurationPreview.Text = _localization.GetString("WillShutdownIn", $"{durationText} {timeText}");
-            }
+            DurationPreview.Text = _localization.CurrentLanguage == "ja" ? $"{durationText}後 {timeText} にシャットダウンします" : _localization.GetString("WillShutdownIn", $"{durationText} {timeText}");
         }
 
                 private void UpdateTimePreview()
         {
-            if (TimePreview == null || ShutdownTimePicker?.SelectedTime == null) return;
+            if (TimePreview == null || ShutdownTimePicker?.SelectedTime == null || _localization == null) return;
 
             var selectedTime = ShutdownTimePicker.SelectedTime.Value;
             var targetDateTime = DateTime.Today.Add(selectedTime);
 
             if (targetDateTime <= DateTime.Now)
             {
-                targetDateTime = targetDateTime.AddDays(1);
-                var timeText = $"{_localization.GetString("Tomorrow")} {selectedTime:hh\\:mm}";
+                var timeText = $"{_localization.GetString("Tomorrow")} {selectedTime:h\\:mm}";
                 TimePreview.Text = _localization.GetString("WillShutdownAt", timeText);
             }
             else
             {
-                var timeText = $"{_localization.GetString("Today")} {selectedTime:hh\\:mm}";
+                var timeText = $"{_localization.GetString("Today")} {selectedTime:h\\:mm}";
                 TimePreview.Text = _localization.GetString("WillShutdownAt", timeText);
             }
         }
@@ -342,28 +332,14 @@ namespace shutdown_timer
 
                 if (isJapanese)
                 {
-                    if (minutes > 0)
-                    {
-                        return $"{hours}時間{minutes}分";
-                    }
-                    else
-                    {
-                        return $"{hours}時間";
-                    }
+                    return minutes > 0 ? $"{hours}時間{minutes}分" : $"{hours}時間";
                 }
                 else
                 {
                     var hourUnit = hours == 1 ? _localization.GetString("HourUnit") : _localization.GetString("HoursUnit");
                     var minuteUnit = minutes == 1 ? _localization.GetString("MinuteUnit") : _localization.GetString("MinutesUnit");
 
-                    if (minutes > 0)
-                    {
-                        return $"{hours} {hourUnit} {minutes} {minuteUnit}";
-                    }
-                    else
-                    {
-                        return $"{hours} {hourUnit}";
-                    }
+                    return minutes > 0 ? $"{hours} {hourUnit} {minutes} {minuteUnit}" : $"{hours} {hourUnit}";
                 }
             }
             else if (duration.TotalMinutes >= 1)
@@ -408,28 +384,21 @@ namespace shutdown_timer
                 var seconds = (int)(SecondsInput.Value);
                 var duration = new TimeSpan(hours, minutes, seconds);
 
-                if (duration.TotalSeconds == 0)
-                {
-                    throw new InvalidOperationException(_localization.GetString("SetTime"));
-                }
-
+                // Allow 0 seconds for immediate shutdown
                 return ShutdownConfig.CreateFromDuration(duration, actionType, forceAction);
             }
             else // Time mode
             {
-                if (ShutdownTimePicker.SelectedTime == null)
-                {
-                    throw new InvalidOperationException(_localization.GetString("SetTime"));
-                }
-
-                return ShutdownConfig.CreateFromTime(ShutdownTimePicker.SelectedTime.Value, actionType, forceAction);
+                return ShutdownTimePicker.SelectedTime == null ? throw new InvalidOperationException(_localization.GetString("SetTime")) : ShutdownConfig.CreateFromTime(ShutdownTimePicker.SelectedTime.Value, actionType, forceAction);
             }
         }
 
         private async void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            var settingsDialog = new Dialogs.SettingsDialog(OnSettingsChanged);
-            settingsDialog.XamlRoot = this.Content.XamlRoot;
+            var settingsDialog = new Dialogs.SettingsDialog(OnSettingsChanged)
+            {
+                XamlRoot = this.Content.XamlRoot
+            };
 
             await settingsDialog.ShowAsync();
         }
@@ -442,8 +411,10 @@ namespace shutdown_timer
 
         private async void InfoButton_Click(object sender, RoutedEventArgs e)
         {
-            var aboutDialog = new Dialogs.AboutDialog();
-            aboutDialog.XamlRoot = this.Content.XamlRoot;
+            var aboutDialog = new Dialogs.AboutDialog
+            {
+                XamlRoot = this.Content.XamlRoot
+            };
 
             await aboutDialog.ShowAsync();
         }
@@ -452,7 +423,7 @@ namespace shutdown_timer
         {
             // Always apply language change (force update)
             _localization.SetLanguage(settings.Language);
-            InitializeUI(); // Re-initialize UI with new language
+            InitializeUi(); // Re-initialize UI with new language
 
             // Apply theme change
             ApplyTheme(settings.Theme);
@@ -474,7 +445,6 @@ namespace shutdown_timer
             {
                 AppTheme.Light => ElementTheme.Light,
                 AppTheme.Dark => ElementTheme.Dark,
-                AppTheme.Default => ElementTheme.Default,
                 _ => ElementTheme.Default
             };
 
@@ -501,36 +471,47 @@ namespace shutdown_timer
 
         private void RecreateTimePicker(ElementTheme theme)
         {
-            if (ShutdownTimePicker?.Parent is Panel parent)
+            if (ShutdownTimePicker?.Parent is not Panel parent) return;
+
+            // Store current values and position
+            var currentTime = ShutdownTimePicker.SelectedTime;
+            var currentHeader = ShutdownTimePicker.Header;
+            var currentMargin = ShutdownTimePicker.Margin;
+            var currentName = ShutdownTimePicker.Name;
+            var currentHorizontalAlignment = ShutdownTimePicker.HorizontalAlignment;
+            var currentClockIdentifier = ShutdownTimePicker.ClockIdentifier;
+            var currentIndex = parent.Children.IndexOf(ShutdownTimePicker);
+
+            // Remove old control
+            parent.Children.Remove(ShutdownTimePicker);
+
+            // Create new control with proper theme
+            var newTimePicker = new TimePicker
             {
-                // Store current values
-                var currentTime = ShutdownTimePicker.SelectedTime;
-                var currentHeader = ShutdownTimePicker.Header;
-                var currentMargin = ShutdownTimePicker.Margin;
-                var currentName = ShutdownTimePicker.Name;
+                Name = currentName,
+                Header = currentHeader,
+                SelectedTime = currentTime,
+                RequestedTheme = theme,
+                Margin = currentMargin,
+                HorizontalAlignment = currentHorizontalAlignment,
+                ClockIdentifier = currentClockIdentifier
+            };
 
-                // Remove old control
-                parent.Children.Remove(ShutdownTimePicker);
+            // Add event handler
+            newTimePicker.SelectedTimeChanged += ShutdownTimePicker_SelectedTimeChanged;
 
-                // Create new control with proper theme
-                var newTimePicker = new TimePicker
-                {
-                    Name = currentName,
-                    Header = currentHeader,
-                    SelectedTime = currentTime,
-                    RequestedTheme = theme,
-                    Margin = currentMargin
-                };
-
-                // Add event handler
-                newTimePicker.SelectedTimeChanged += ShutdownTimePicker_SelectedTimeChanged;
-
-                // Add to parent
-                parent.Children.Add(newTimePicker);
-
-                // Update reference
-                ShutdownTimePicker = newTimePicker;
+            // Insert at original position
+            if (currentIndex >= 0 && currentIndex < parent.Children.Count)
+            {
+                parent.Children.Insert(currentIndex, newTimePicker);
             }
+            else
+            {
+                parent.Children.Add(newTimePicker);
+            }
+
+            // Update reference
+            ShutdownTimePicker = newTimePicker;
         }
 
         private void RefreshNumberBoxTheme(ElementTheme theme)
@@ -546,41 +527,39 @@ namespace shutdown_timer
 
         private void RecreateNumberBox(ref NumberBox numberBox, string name, int min, int max, int gridColumn, ElementTheme theme)
         {
-            if (numberBox?.Parent is Panel parent)
+            if (numberBox.Parent is not Panel parent) return;
+            // Store current values
+            var currentValue = numberBox.Value;
+            var currentHeader = numberBox.Header;
+            var currentMargin = numberBox.Margin;
+
+            // Remove old control
+            parent.Children.Remove(numberBox);
+
+            // Create new control with proper theme
+            var newNumberBox = new NumberBox
             {
-                // Store current values
-                var currentValue = numberBox.Value;
-                var currentHeader = numberBox.Header;
-                var currentMargin = numberBox.Margin;
+                Name = name,
+                Header = currentHeader,
+                Value = currentValue,
+                Minimum = min,
+                Maximum = max,
+                SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact,
+                RequestedTheme = theme,
+                Margin = currentMargin
+            };
 
-                // Remove old control
-                parent.Children.Remove(numberBox);
+            // Set grid column
+            Grid.SetColumn(newNumberBox, gridColumn);
 
-                // Create new control with proper theme
-                var newNumberBox = new NumberBox
-                {
-                    Name = name,
-                    Header = currentHeader,
-                    Value = currentValue,
-                    Minimum = min,
-                    Maximum = max,
-                    SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact,
-                    RequestedTheme = theme,
-                    Margin = currentMargin
-                };
+            // Add event handler
+            newNumberBox.ValueChanged += TimeInput_ValueChanged;
 
-                // Set grid column
-                Grid.SetColumn(newNumberBox, gridColumn);
+            // Add to parent
+            parent.Children.Add(newNumberBox);
 
-                // Add event handler
-                newNumberBox.ValueChanged += TimeInput_ValueChanged;
-
-                // Add to parent
-                parent.Children.Add(newNumberBox);
-
-                // Update reference
-                numberBox = newNumberBox;
-            }
+            // Update reference
+            numberBox = newNumberBox;
         }
 
         private void UpdateTitleWithCountdown()

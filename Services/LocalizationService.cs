@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 
@@ -6,11 +5,28 @@ namespace shutdown_timer.Services
 {
     public class LocalizationService
     {
-        private static LocalizationService _instance = null!;
-        public static LocalizationService Instance => _instance ??= new LocalizationService();
+        private static LocalizationService? _instance;
+        private static readonly object _lock = new object();
+
+        public static LocalizationService Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    lock (_lock)
+                    {
+                        if (_instance == null)
+                        {
+                            _instance = new LocalizationService();
+                        }
+                    }
+                }
+                return _instance;
+            }
+        }
 
         private readonly Dictionary<string, Dictionary<string, string>> _resources;
-        private string _currentLanguage;
 
         private LocalizationService()
         {
@@ -207,7 +223,6 @@ namespace shutdown_timer.Services
                     ["Copyright"] = "© 2025 yashikota. All rights reserved.",
                     ["Overview"] = "概要",
                     ["SetTime"] = "時間を設定してください",
-                    ["WillShutdownIn"] = "{0}後にシャットダウンします",
                     ["WillExecuteAt"] = "{0} にシャットダウンします",
                     ["Today"] = "今日",
                     ["Tomorrow"] = "明日",
@@ -220,27 +235,22 @@ namespace shutdown_timer.Services
                 }
             };
 
-            _currentLanguage = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
-            if (!_resources.ContainsKey(_currentLanguage))
+            CurrentLanguage = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+            if (!_resources.ContainsKey(CurrentLanguage))
             {
-                _currentLanguage = "en";
+                CurrentLanguage = "en";
             }
         }
 
         public string GetString(string key)
         {
-            if (_resources.ContainsKey(_currentLanguage) && _resources[_currentLanguage].ContainsKey(key))
+            if (_resources.TryGetValue(CurrentLanguage, out var value) && value.TryGetValue(key, out var getString))
             {
-                return _resources[_currentLanguage][key];
+                return getString;
             }
 
             // Fallback to English
-            if (_resources["en"].ContainsKey(key))
-            {
-                return _resources["en"][key];
-            }
-
-            return key;
+            return _resources["en"].GetValueOrDefault(key, key);
         }
 
         public string GetString(string key, params object[] args)
@@ -253,11 +263,11 @@ namespace shutdown_timer.Services
         {
             if (_resources.ContainsKey(language))
             {
-                _currentLanguage = language;
+                CurrentLanguage = language;
             }
         }
 
-        public string CurrentLanguage => _currentLanguage;
+        public string CurrentLanguage { get; private set; }
 
         public IEnumerable<string> AvailableLanguages => _resources.Keys;
     }

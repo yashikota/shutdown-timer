@@ -13,34 +13,39 @@ namespace shutdown_timer.Services
 
         public async Task<bool> ScheduleShutdownAsync(ShutdownConfig config)
         {
-            try
+            var secondsUntilAction = (int)(config.TargetTime - DateTime.Now).TotalSeconds;
+
+            // If time has already passed (negative), throw error
+            if (secondsUntilAction < 0)
             {
-                var secondsUntilAction = (int)(config.TargetTime - DateTime.Now).TotalSeconds;
+                throw new InvalidOperationException("The specified time has already passed");
+            }
 
-                if (secondsUntilAction <= 0)
-                {
-                    throw new InvalidOperationException("The specified time has already passed");
-                }
+            // If 0 seconds, execute immediately (set to 1 second minimum for shutdown command)
+            if (secondsUntilAction == 0)
+            {
+                secondsUntilAction = 1;
+            }
 
-                                var arguments = GetShutdownArguments(config.ActionType, secondsUntilAction, config.ForceAction);
+            var arguments = GetShutdownArguments(config.ActionType, secondsUntilAction, config.ForceAction);
 
-                var psi = new ProcessStartInfo
-                {
-                    FileName = "shutdown.exe",
-                    Arguments = arguments,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
+            var psi = new ProcessStartInfo
+            {
+                FileName = "shutdown.exe",
+                Arguments = arguments,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
 
-                var process = Process.Start(psi);
-                await process!.WaitForExitAsync();
+            var process = Process.Start(psi);
+            await process!.WaitForExitAsync();
 
-                if (process!.ExitCode == 0)
-                {
+            switch (process.ExitCode)
+            {
+                case 0:
                     await SaveScheduleAsync(config);
                     return true;
-                }
-                else if (process!.ExitCode == 1190)
+                case 1190:
                 {
                     // Shutdown already scheduled - try to cancel first, then reschedule
                     await CancelShutdownAsync();
@@ -49,28 +54,22 @@ namespace shutdown_timer.Services
                     var retryProcess = Process.Start(psi);
                     await retryProcess!.WaitForExitAsync();
 
-                    if (retryProcess!.ExitCode == 0)
+                    if (retryProcess.ExitCode == 0)
                     {
                         await SaveScheduleAsync(config);
                         return true;
                     }
                     else
                     {
-                        throw new InvalidOperationException($"Shutdown command failed after retry (Exit Code: {retryProcess!.ExitCode})");
+                        throw new InvalidOperationException($"Shutdown command failed after retry (Exit Code: {retryProcess.ExitCode})");
                     }
                 }
-                else
-                {
-                    throw new InvalidOperationException($"Shutdown command failed (Exit Code: {process!.ExitCode})");
-                }
-            }
-            catch
-            {
-                throw;
+                default:
+                    throw new InvalidOperationException($"Shutdown command failed (Exit Code: {process.ExitCode})");
             }
         }
 
-        public async Task<bool> CancelShutdownAsync()
+        public static async Task<bool> CancelShutdownAsync()
         {
             try
             {
@@ -93,7 +92,7 @@ namespace shutdown_timer.Services
                 }
 
                 // Return true if shutdown was cancelled successfully OR if no shutdown was scheduled (exit code 1116)
-                return process!.ExitCode == 0 || process!.ExitCode == 1116;
+                return process.ExitCode is 0 or 1116;
             }
             catch
             {

@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace shutdown_timer.Dialogs
 {
-    public sealed partial class AboutDialog : ContentDialog
+    public sealed partial class AboutDialog
     {
         private readonly LocalizationService _localizationService;
         private readonly SettingsService _settingsService;
@@ -18,7 +18,7 @@ namespace shutdown_timer.Dialogs
             _settingsService = SettingsService.Instance;
 
             ApplyTheme();
-            InitializeUI();
+            InitializeUi();
         }
 
         private void ApplyTheme()
@@ -28,14 +28,13 @@ namespace shutdown_timer.Dialogs
             {
                 AppTheme.Light => ElementTheme.Light,
                 AppTheme.Dark => ElementTheme.Dark,
-                AppTheme.Default => ElementTheme.Default,
                 _ => ElementTheme.Default
             };
 
-            this.RequestedTheme = elementTheme;
+            RequestedTheme = elementTheme;
         }
 
-        private void InitializeUI()
+        private void InitializeUi()
         {
             // Get version from assembly
             var version = Assembly.GetExecutingAssembly().GetName().Version;

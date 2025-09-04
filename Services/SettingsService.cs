@@ -8,10 +8,28 @@ namespace shutdown_timer.Services
 {
     public class SettingsService
     {
-        private static SettingsService _instance = null!;
-        public static SettingsService Instance => _instance ??= new SettingsService();
+        private static SettingsService? _instance;
+        private static readonly object _lock = new object();
 
-        private const string SETTINGS_FILE = "app_settings.json";
+        public static SettingsService Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    lock (_lock)
+                    {
+                        if (_instance == null)
+                        {
+                            _instance = new SettingsService();
+                        }
+                    }
+                }
+                return _instance;
+            }
+        }
+
+        private const string SettingsFile = "app_settings.json";
         private AppSettings _currentSettings;
 
         private SettingsService()
@@ -19,32 +37,13 @@ namespace shutdown_timer.Services
             _currentSettings = LoadSettingsSync();
         }
 
-        private AppSettings LoadSettingsSync()
+        private static AppSettings LoadSettingsSync()
         {
             try
             {
-                if (File.Exists(SETTINGS_FILE))
+                if (File.Exists(SettingsFile))
                 {
-                    var jsonString = File.ReadAllText(SETTINGS_FILE);
-                    var settings = JsonSerializer.Deserialize<AppSettings>(jsonString);
-                    return settings ?? new AppSettings();
-                }
-            }
-            catch
-            {
-                // If there's any error loading settings, return default settings
-            }
-
-            return new AppSettings();
-        }
-
-        public async Task<AppSettings> LoadSettingsAsync()
-        {
-            try
-            {
-                if (File.Exists(SETTINGS_FILE))
-                {
-                    var jsonString = await File.ReadAllTextAsync(SETTINGS_FILE);
+                    var jsonString = File.ReadAllText(SettingsFile);
                     var settings = JsonSerializer.Deserialize<AppSettings>(jsonString);
                     return settings ?? new AppSettings();
                 }
@@ -65,7 +64,7 @@ namespace shutdown_timer.Services
                 {
                     WriteIndented = true
                 });
-                await File.WriteAllTextAsync(SETTINGS_FILE, jsonString);
+                await File.WriteAllTextAsync(SettingsFile, jsonString);
                 _currentSettings = settings.Clone();
             }
             catch
