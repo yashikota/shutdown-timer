@@ -19,7 +19,7 @@
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="0,0,0,1"
-                Padding="24,16">
+                Padding="16,12">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -58,16 +58,19 @@
         <!-- Main Content -->
         <ScrollViewer Grid.Row="1"
                       VerticalScrollBarVisibility="Auto"
-                      Padding="24">
-            <StackPanel Spacing="24" MaxWidth="600">
+                      Padding="16,24">
+            <StackPanel Spacing="24"
+                        HorizontalAlignment="Center"
+                        MaxWidth="800"
+                        MinWidth="300">
 
 
                 <!-- Timer Configuration -->
-                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
                         CornerRadius="8"
-                        Padding="20">
+                        Padding="16">
                     <StackPanel Spacing="20">
 
                                                 <!-- Mode Selection -->
@@ -83,9 +86,9 @@
                             <StackPanel x:Name="DurationModeContent" Spacing="16" Visibility="Visible">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*" MinWidth="80"/>
+                                        <ColumnDefinition Width="*" MinWidth="80"/>
+                                        <ColumnDefinition Width="*" MinWidth="80"/>
                                     </Grid.ColumnDefinitions>
 
                                     <NumberBox x:Name="HoursInput"
@@ -95,7 +98,8 @@
                                              SpinButtonPlacementMode="Compact"
                                              Maximum="23"
                                              Minimum="0"
-                                             Margin="0,0,8,0"
+                                             Margin="0,0,6,0"
+                                             MinWidth="80"
                                              ValueChanged="TimeInput_ValueChanged"/>
 
                                     <NumberBox x:Name="MinutesInput"
@@ -105,7 +109,8 @@
                                              SpinButtonPlacementMode="Compact"
                                              Maximum="59"
                                              Minimum="0"
-                                             Margin="8,0,8,0"
+                                             Margin="6,0,6,0"
+                                             MinWidth="80"
                                              ValueChanged="TimeInput_ValueChanged"/>
 
                                     <NumberBox x:Name="SecondsInput"
@@ -115,7 +120,8 @@
                                              SpinButtonPlacementMode="Compact"
                                              Maximum="59"
                                              Minimum="0"
-                                             Margin="8,0,0,0"
+                                             Margin="6,0,0,0"
+                                             MinWidth="80"
                                              ValueChanged="TimeInput_ValueChanged"/>
                                 </Grid>
 
@@ -195,7 +201,7 @@
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="0,1,0,0"
-                Padding="24,12">
+                Padding="16,12">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>

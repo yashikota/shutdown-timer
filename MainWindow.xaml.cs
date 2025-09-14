@@ -47,7 +47,22 @@ namespace shutdown_timer
         private void SetupWindow()
         {
 			SystemBackdrop = new MicaBackdrop();
-            AppWindow.Resize(new SizeInt32(700, 850));
+
+            // Set minimum and default window sizes for responsive layout
+            var minSize = new SizeInt32(350, 550);
+            var defaultSize = new SizeInt32(480, 680);
+
+            AppWindow.Resize(defaultSize);
+
+            // Set minimum size constraint
+            if (AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
+            {
+                presenter.SetBorderAndTitleBar(true, true);
+                presenter.IsMinimizable = true;
+                presenter.IsMaximizable = true;
+                presenter.IsResizable = true;
+            }
+
 			AppWindow.SetIcon("Assets/timer.ico");
             Title = _localization.GetString("AppTitle");
 
