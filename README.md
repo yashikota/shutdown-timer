@@ -2,7 +2,7 @@
 
 A modern Windows shutdown timer application. Schedule automatic shutdown or restart operations with an intuitive interface.
 
-![Shutdown Timer](shutdown-timer.avif)
+https://github.com/user-attachments/assets/83472298-3b93-495e-bd7f-71966dd55189
 
 ## ✨ Features
 
