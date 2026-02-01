@@ -76,7 +76,7 @@ jobs:
           $Version = "${{ steps.version.outputs.VERSION }}"
           $Rid = "${{ matrix.rid }}"
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          winapp pack "publish\$Rid" --output "dist\shutdown-timer-$Version-$Rid.msix" --cert cert.pfx --cert-password password --self-contained
+          winapp pack "publish\$Rid" --output "dist\shutdown-timer-$Version-$Rid.msix" --cert cert.pfx --cert-password password --self-contained --manifest Package.appxmanifest
 
       - name: Collect & Zip
         shell: pwsh
