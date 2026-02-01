@@ -38,8 +38,8 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install winapp CLI
-        run: dotnet tool install -g winapp
+      - name: Setup winapp CLI
+        uses: microsoft/setup-WinAppCli@v0.1
 
       - name: Restore
         run: dotnet restore
