@@ -61,6 +61,8 @@ jobs:
         shell: pwsh
         run: |
           winapp cert generate --output cert.pfx --publisher "CN=kota"
+          $cert = Get-PfxCertificate -FilePath cert.pfx -Password (ConvertTo-SecureString -String "password" -AsPlainText -Force)
+          Export-Certificate -Cert $cert -FilePath cert.cer -Type CERT
 
       - name: Sign executables
         shell: pwsh
@@ -117,7 +119,7 @@ jobs:
         with:
           name: certificate
           path: cert.cer
-          if-no-files-found: warn
+          if-no-files-found: error
 
   release:
     name: Create GitHub Release (on tag)
