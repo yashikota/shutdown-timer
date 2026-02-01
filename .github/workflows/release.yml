@@ -60,15 +60,14 @@ jobs:
       - name: Generate certificate
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path cert | Out-Null
-          winapp cert generate --output cert\cert.pfx
+          winapp cert generate --output cert.pfx
 
       - name: Sign executables
         shell: pwsh
         run: |
           $pubDir = "publish\${{ matrix.rid }}"
           Get-ChildItem -Path $pubDir -Filter "*.exe" | ForEach-Object {
-            winapp sign $_.FullName cert\cert.pfx --password password
+            winapp sign $_.FullName cert.pfx --password password
           }
 
       - name: Create MSIX package
@@ -77,7 +76,7 @@ jobs:
           $Version = "${{ steps.version.outputs.VERSION }}"
           $Rid = "${{ matrix.rid }}"
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          winapp pack "publish\$Rid" --output "dist\shutdown-timer-$Version-$Rid.msix" --cert cert\cert.pfx --cert-password password --self-contained
+          winapp pack "publish\$Rid" --output "dist\shutdown-timer-$Version-$Rid.msix" --cert cert.pfx --cert-password password --self-contained
 
       - name: Collect & Zip
         shell: pwsh
@@ -117,7 +116,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: certificate
-          path: cert\cert.cer
+          path: cert.cer
           if-no-files-found: error
 
   release:
