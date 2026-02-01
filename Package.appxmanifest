@@ -34,7 +34,7 @@
   <Applications>
     <Application Id="App"
       Executable="shutdown-timer.exe"
-      EntryPoint="shutdown_timer.App">
+      EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
         DisplayName="Shutdown Timer"
         Description="A modern and simple Windows shutdown timer application"

@@ -33,6 +33,22 @@ jobs:
           echo "VERSION=$version" >> $env:GITHUB_OUTPUT
           echo "Version: $version"
 
+      - name: Update manifest version
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.VERSION }}"
+          if ($version -ne "dev") {
+            # Convert x.y.z to x.y.z.0 format for MSIX
+            $parts = $version.Split('.')
+            while ($parts.Count -lt 4) { $parts += "0" }
+            $msixVersion = $parts[0..3] -join '.'
+
+            $manifest = Get-Content "Package.appxmanifest" -Raw
+            $manifest = $manifest -replace 'Version="[^"]*"', "Version=`"$msixVersion`""
+            Set-Content "Package.appxmanifest" $manifest
+            echo "Updated manifest version to $msixVersion"
+          }
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
