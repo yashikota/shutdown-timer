@@ -34,9 +34,19 @@ https://github.com/user-attachments/assets/83472298-3b93-495e-bd7f-71966dd55189
 
 ### Option 2: MSIX Package
 
+> **⚠️ About Certificate Installation**
+>
+> This app uses a self-signed certificate. To install the MSIX package, you need to add this certificate to your "Trusted Root Certification Authorities".
+>
+> **Please understand what this means:**
+> - You are trusting a certificate created by this project's developer
+> - Apps signed with this certificate will be trusted by your system
+> - Only proceed if you trust this project and have reviewed the source code
+> - The certificate only needs to be installed once
+
 1. Visit the [Releases](https://github.com/yashikota/shutdown-timer/releases) page
-2. Download `cert.cer` and install the certificate:
-   - Double-click `cert.cer`
+2. Download `signing-cert.cer` and install the certificate:
+   - Double-click `signing-cert.cer`
    - Click "Install Certificate"
    - Select "Local Machine" → Next
    - Select "Place all certificates in the following store" → Browse
