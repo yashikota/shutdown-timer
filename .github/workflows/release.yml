@@ -38,6 +38,9 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Install winapp CLI
+        run: dotnet tool install -g winapp
+
       - name: Restore
         run: dotnet restore
 
@@ -53,6 +56,27 @@ jobs:
           /p:PublishSingleFile=false
           /p:IncludeNativeLibrariesForSelfExtract=false
           -o publish/${{ matrix.rid }}
+
+      - name: Generate certificate
+        shell: pwsh
+        run: |
+          winapp cert generate --output ./cert
+
+      - name: Sign executables
+        shell: pwsh
+        run: |
+          $pubDir = "publish/${{ matrix.rid }}"
+          Get-ChildItem -Path $pubDir -Filter "*.exe" | ForEach-Object {
+            winapp sign $_.FullName ./cert/cert.pfx --password password
+          }
+
+      - name: Create MSIX package
+        shell: pwsh
+        run: |
+          $Version = "${{ steps.version.outputs.VERSION }}"
+          $Rid = "${{ matrix.rid }}"
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          winapp pack "publish/$Rid" --output "dist/shutdown-timer-$Version-$Rid.msix" --cert ./cert/cert.pfx --cert-password password --self-contained
 
       - name: Collect & Zip
         shell: pwsh
@@ -78,6 +102,21 @@ jobs:
         with:
           name: shutdown-timer-${{ steps.version.outputs.VERSION }}-${{ matrix.rid }}
           path: dist/shutdown-timer-${{ steps.version.outputs.VERSION }}-${{ matrix.rid }}.zip
+          if-no-files-found: error
+
+      - name: Upload MSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: shutdown-timer-${{ steps.version.outputs.VERSION }}-${{ matrix.rid }}-msix
+          path: dist/shutdown-timer-${{ steps.version.outputs.VERSION }}-${{ matrix.rid }}.msix
+          if-no-files-found: error
+
+      - name: Upload certificate
+        if: matrix.rid == 'win-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: certificate
+          path: ./cert/cert.cer
           if-no-files-found: error
 
   release:
