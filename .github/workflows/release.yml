@@ -33,22 +33,6 @@ jobs:
           echo "VERSION=$version" >> $env:GITHUB_OUTPUT
           echo "Version: $version"
 
-      - name: Update manifest version
-        shell: pwsh
-        run: |
-          $version = "${{ steps.version.outputs.VERSION }}"
-          if ($version -ne "dev") {
-            # Convert x.y.z to x.y.z.0 format for MSIX
-            $parts = $version.Split('.')
-            while ($parts.Count -lt 4) { $parts += "0" }
-            $msixVersion = $parts[0..3] -join '.'
-
-            [xml]$xml = Get-Content "Package.appxmanifest"
-            $xml.Package.Identity.Version = $msixVersion
-            $xml.Save("$PWD\Package.appxmanifest")
-            echo "Updated manifest version to $msixVersion"
-          }
-
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -94,6 +78,15 @@ jobs:
         run: |
           $Version = "${{ steps.version.outputs.VERSION }}"
           $Rid = "${{ matrix.rid }}"
+
+          # Update manifest version for MSIX only
+          $parts = $Version.Split('.')
+          while ($parts.Count -lt 4) { $parts += "0" }
+          $msixVersion = $parts[0..3] -join '.'
+          [xml]$xml = Get-Content "Package.appxmanifest"
+          $xml.Package.Identity.Version = $msixVersion
+          $xml.Save("$PWD\Package.appxmanifest")
+
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           winapp pack "publish\$Rid" --output "dist\shutdown-timer-$Version-$Rid.msix" --cert cert.pfx --cert-password password --manifest Package.appxmanifest
 
