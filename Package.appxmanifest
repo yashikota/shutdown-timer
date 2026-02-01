@@ -27,13 +27,14 @@
   </Dependencies>
 
   <Resources>
-    <Resource Language="x-generate"/>
+    <Resource Language="en"/>
+    <Resource Language="ja"/>
   </Resources>
 
   <Applications>
     <Application Id="App"
-      Executable="$targetnametoken$.exe"
-      EntryPoint="$targetentrypoint$">
+      Executable="shutdown-timer.exe"
+      EntryPoint="shutdown_timer.App">
       <uap:VisualElements
         DisplayName="Shutdown Timer"
         Description="A modern and simple Windows shutdown timer application"

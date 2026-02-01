@@ -57,6 +57,11 @@ jobs:
           /p:IncludeNativeLibrariesForSelfExtract=false
           -o publish/${{ matrix.rid }}
 
+      - name: Copy Assets for MSIX
+        shell: pwsh
+        run: |
+          Copy-Item -Path Assets -Destination "publish\${{ matrix.rid }}\Assets" -Recurse -Force
+
       - name: Generate certificate
         shell: pwsh
         run: |
