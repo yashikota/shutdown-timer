@@ -34,8 +34,7 @@ https://github.com/user-attachments/assets/83472298-3b93-495e-bd7f-71966dd55189
 
 ### Option 2: MSIX Package
 
-> **⚠️ About Certificate Installation**
->
+> [!CAUTION]
 > This app uses a self-signed certificate. To install the MSIX package, you need to add this certificate to your "Trusted Root Certification Authorities".
 >
 > **Please understand what this means:**
