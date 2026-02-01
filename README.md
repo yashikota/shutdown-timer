@@ -26,9 +26,23 @@ https://github.com/user-attachments/assets/83472298-3b93-495e-bd7f-71966dd55189
 
 ## 🚀 Installation
 
+### Option 1: Portable (ZIP)
+
 1. Visit the [Releases](https://github.com/yashikota/shutdown-timer/releases) page
 2. Download `shutdown-timer-{VERSION}-win-{ARCHITECTURE}.zip`
 3. Extract the ZIP file and run `shutdown-timer.exe`
+
+### Option 2: MSIX Package
+
+1. Visit the [Releases](https://github.com/yashikota/shutdown-timer/releases) page
+2. Download `cert.cer` and install the certificate:
+   - Double-click `cert.cer`
+   - Click "Install Certificate"
+   - Select "Local Machine" → Next
+   - Select "Place all certificates in the following store" → Browse
+   - Select "Trusted Root Certification Authorities" → OK → Next → Finish
+3. Download `shutdown-timer-{VERSION}-win-{ARCHITECTURE}.msix`
+4. Double-click the `.msix` file to install
 
 ## 🎮 How to Use
 
