@@ -89,14 +89,6 @@ jobs:
         run: |
           [IO.File]::WriteAllBytes("cert.pfx", [Convert]::FromBase64String("${{ secrets.SIGNING_CERT_PFX }}"))
 
-      - name: Sign executables
-        shell: pwsh
-        run: |
-          $pubDir = "publish\${{ matrix.rid }}"
-          Get-ChildItem -Path $pubDir -Filter "*.exe" | ForEach-Object {
-            winapp sign $_.FullName cert.pfx --password password
-          }
-
       - name: Create MSIX package
         shell: pwsh
         run: |
