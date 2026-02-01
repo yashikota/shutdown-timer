@@ -60,7 +60,7 @@ jobs:
       - name: Generate certificate
         shell: pwsh
         run: |
-          winapp cert generate --output cert.pfx
+          winapp cert generate --output cert.pfx --publisher "CN=kota"
 
       - name: Sign executables
         shell: pwsh
