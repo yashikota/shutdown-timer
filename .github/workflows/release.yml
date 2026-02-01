@@ -43,9 +43,9 @@ jobs:
             while ($parts.Count -lt 4) { $parts += "0" }
             $msixVersion = $parts[0..3] -join '.'
 
-            $manifest = Get-Content "Package.appxmanifest" -Raw
-            $manifest = $manifest -replace 'Version="[^"]*"', "Version=`"$msixVersion`""
-            Set-Content "Package.appxmanifest" $manifest
+            [xml]$xml = Get-Content "Package.appxmanifest"
+            $xml.Package.Identity.Version = $msixVersion
+            $xml.Save("$PWD\Package.appxmanifest")
             echo "Updated manifest version to $msixVersion"
           }
 
