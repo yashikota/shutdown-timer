@@ -60,7 +60,13 @@ jobs:
       - name: Copy Assets for MSIX
         shell: pwsh
         run: |
-          Copy-Item -Path Assets -Destination "publish\${{ matrix.rid }}\Assets" -Recurse -Force
+          $destDir = "publish\${{ matrix.rid }}\Assets"
+          New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+          Copy-Item -Path "Assets\SplashScreen.scale-200.png" -Destination "$destDir\SplashScreen.png"
+          Copy-Item -Path "Assets\Square150x150Logo.scale-200.png" -Destination "$destDir\Square150x150Logo.png"
+          Copy-Item -Path "Assets\Square44x44Logo.scale-200.png" -Destination "$destDir\Square44x44Logo.png"
+          Copy-Item -Path "Assets\Wide310x150Logo.scale-200.png" -Destination "$destDir\Wide310x150Logo.png"
+          Copy-Item -Path "Assets\StoreLogo.png" -Destination "$destDir\StoreLogo.png"
 
       - name: Generate certificate
         shell: pwsh
