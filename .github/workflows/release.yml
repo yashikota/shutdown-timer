@@ -68,12 +68,10 @@ jobs:
           Copy-Item -Path "Assets\Wide310x150Logo.scale-200.png" -Destination "$destDir\Wide310x150Logo.png"
           Copy-Item -Path "Assets\StoreLogo.png" -Destination "$destDir\StoreLogo.png"
 
-      - name: Generate certificate
+      - name: Restore certificate from secrets
         shell: pwsh
         run: |
-          winapp cert generate --output cert.pfx --publisher "CN=kota"
-          $cert = Get-PfxCertificate -FilePath cert.pfx -Password (ConvertTo-SecureString -String "password" -AsPlainText -Force)
-          Export-Certificate -Cert $cert -FilePath cert.cer -Type CERT
+          [IO.File]::WriteAllBytes("cert.pfx", [Convert]::FromBase64String("${{ secrets.SIGNING_CERT_PFX }}"))
 
       - name: Sign executables
         shell: pwsh
@@ -129,7 +127,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: certificate
-          path: cert.cer
+          path: signing-cert.cer
           if-no-files-found: error
 
   release:
